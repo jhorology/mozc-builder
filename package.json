@@ -1,0 +1,10 @@
+{
+  "name": "mozc-builder",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "",
+  "devDependencies": {
+    "@bazel/bazelisk": "^1.26.0"
+  }
+}
