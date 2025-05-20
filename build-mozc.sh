@@ -124,7 +124,7 @@ repo() {
             local new_revision=$(git rev-parse HEAD)
 
             if [[ $current_revision != $new_revision ]]; then
-                log "[$repo] has changed. [$current_revision] -> [$remote_revision]"
+                log "[$repo] has changed. [$current_revision] -> [$new_revision]"
                 echo $new_revision > $revision_file
                 has_changed=true
             fi
