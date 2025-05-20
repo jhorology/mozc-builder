@@ -113,11 +113,12 @@ repo() {
 
             log "synching local repo with remote repo [$repo]"
             git reset --hard --recurse-submodules
+
             if $clean; then
                 git clean -dfx
                 git submodule foreach --recursive git clean -dfx
             fi
-            git pull --depth=1 --update-shallow --recurse-submodules
+            git pull --rebase --depth=1 --update-shallow --recurse-submodules
 
 
             local new_revision=$(git rev-parse HEAD)
