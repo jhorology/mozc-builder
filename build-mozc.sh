@@ -118,8 +118,8 @@ repo() {
                 git clean -dfx
                 git submodule foreach --recursive git clean -dfx
             fi
-            git pull --rebase --depth=1 --update-shallow --recurse-submodules
-
+            git pull --depth=20 --update-shallow --recurse-submodules \
+                || error_exit "failed to pull [$repo]"
 
             local new_revision=$(git rev-parse HEAD)
 
@@ -561,6 +561,7 @@ opts "$@"
 
 init
 repos
+
 ut
 if $opts[for-win]; then
     win_mozc
