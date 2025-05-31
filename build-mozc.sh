@@ -118,7 +118,7 @@ repo() {
                 git clean -dfx
                 git submodule foreach --recursive git clean -dfx
             fi
-            git pull --depth=20 --update-shallow --recurse-submodules \
+            git pull --recurse-submodules \
                 || error_exit "failed to pull [$repo]"
 
             local new_revision=$(git rev-parse HEAD)
@@ -134,7 +134,7 @@ repo() {
     else
         log "cloning remote repos itory [$repo]"
         pushd $basedir
-        git clone --depth=1 --single-branch --recurse-submodules --shallow-submodules  https://github.com/${repo}.git
+        git clone --depth=1 --recurse-submodules https://github.com/${repo}.git
         has_changed=true
         pushd $local_repo
         git rev-parse HEAD > $revision_file
