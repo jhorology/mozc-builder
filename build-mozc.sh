@@ -222,8 +222,8 @@ activate_direnv() {
 }
 
 
-baxel_error() {
-    if $ops[for-win]; then
+bazel_error() {
+    if $opts[for-win]; then
         cd $stats[win-workspace]/mozc/src
         win_cmd npx bazel shutdown
     else
@@ -435,7 +435,8 @@ macos_mozc() {
     fi
 
     log "start bazel build task"
-    MOZC_QT_PATH=${PWD}/third_party/qt npx bazel build $bazel_targets[*] \
+    MOZC_QT_PATH=${PWD}/third_party/qt \
+        npx bazel build $bazel_targets[*] \
                 --config oss_macos \
                 --config release_build \
         || bazel_error
@@ -476,7 +477,10 @@ linux_mozc() {
     fi
     log "start bazel build task"
 
-    npx bazel build package --config oss_linux --config release_build \
+    # disable ccache
+    CC=/usr/bin/gcc CXX=/uer/bim/g++ \
+                    npx bazel build package \
+                    --config oss_linux --config release_build \
         || bazel_error
     npx bazel shutdown
     log "bazel task finished successfully"
