@@ -1,0 +1,16 @@
+[tools]
+bazelisk = "latest"
+python = "3.12"
+uv = "latest"
+
+[env]
+_.python.venv = { path = ".venv", create = true }
+
+[tasks.setup]
+description = "Install all tools and python dependencies"
+run = """
+mise install
+# uv venv .venv
+uv pip sync requirements.txt --python .venv
+"""
+sources = ["requirements.txt", ".mise.toml"]

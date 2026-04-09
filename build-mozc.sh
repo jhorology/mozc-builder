@@ -16,6 +16,7 @@ declare -A build_bool_opts=(
     [clean]=false
     [emacs]=true
     [install]=false
+    [brew-qt]=true
 )
 
 declare -A build_value_opts=(
@@ -62,6 +63,7 @@ usage() {
           "    --update, --no-update                  Sync with remote git repositories. Default: $opts[update]" \
           "    --clean, --no-clean                    Clean build. Default: $opts[clean]" \
           "    --install, --no-install                Install mozc after build task. Default: $opts[install]" \
+          "    --brew-qt, --no-ibrew-qt               Build with Homebrew's Qt for macOS. Default: $opts[brew-qt]" \
           "    --win-workspace=<dir>                  Location for build workspace for windows. Default: $opts[win-workspace]" \
           "                                           Relative path from USERPROFILE directory." \
           "    --alt-cannadic, --no-alt-cannadic      Enable additional alt-canna dictionary. Default: $opts[alt-cannadic]" \
@@ -118,7 +120,7 @@ repo() {
                 git clean -dfx
                 git submodule foreach --recursive git clean -dfx
             fi
-            git pull --recurse-submodules \
+            git pull --ff-only --recurse-submodules \
                 || error_exit "failed to pull [$repo]"
 
             local new_revision=$(git rev-parse HEAD)
@@ -170,65 +172,27 @@ install_os_packages() {
     fi
 }
 
-node_env() {
-    log "activating nodejs"
-    if $opts[for-win]; then
-        cd $stats[win-workspace]
-        win_cmd nvm use $nodejs_version
-        if [[ ! -f node_modules ]]; then
-            cp $PROJECT/package.json .
-            win_cmd npm install
-        fi
-        cd -
-    else
-        source $NVM_DIR/nvm.sh
-        cd $PROJECT
-        nvm use $nodejs_version
-        if [[ ! -f node_modules ]]; then
-            npm install
-        fi
-        cd -
-    fi
-}
 
-py_venv() {
-    log "activating python venv"
+activate_mise() {
+    log "activating mise"
 
     cd $PROJECT
-    if [[ ! -d .venv ]]; then
-        python3 -m venv .venv
-        source .venv/bin/activate
-        pip install --upgrade pip
-        pip install -r requirements.txt
-    else
-        source .venv/bin/activate
-    fi
-    cd -
+    mise trust --yes
+    mise run setup
+    eval "$(mise env)"
+    log "mise activated"
+    log $(python --version)
+    log $(bazelisk --version)
+    log $(uv --version)
 }
-
-install_node_packages() {
-    log "installing node packages"
-
-    cd $PROJECT
-    npm install
-}
-
-activate_direnv() {
-    log "activating direnv"
-
-    cd $PROJECT
-    direnv allow
-    eval "$(direnv export zsh)"
-}
-
 
 bazel_error() {
     if $opts[for-win]; then
         cd $stats[win-workspace]/mozc/src
-        win_cmd npx bazel shutdown
+        win_cmd bazelisk shutdown
     else
         cd $PROJECT/repos/mozc/src
-        npx bazel shutdown
+        bazelisk shutdown
     fi
     exit 1
 }
@@ -315,9 +279,8 @@ init() {
         stats[win-workspace]=$env[win-home]/$opts[win-workspace]
         mkdir -p $stats[win-workspace]
         mkdir -p $stats[win-workspace]/dist
+        cp -f "$PROJECT/.mise.toml" $stats[win-workspace]
     fi
-    py_venv
-    node_env
 }
 
 repos() {
@@ -398,27 +361,65 @@ ut() {
 }
 
 macos_mozc() {
-    cd $PROJECT/repos/mozc/src
+    cd "$PROJECT"/repos/mozc/src
 
     if $opts[clean]; then
         log "cleanup mozc buid tree"
-        npx bazel clean --expunge
-        python3 build_mozc.py clean
+        bazelisk clean --expunge
     fi
 
-    if [[ ! -d third_party/qt_src || -n $stats[(i)mozc-deps-changed] ]]; then
+
+    if [[ -n $stats[(i)mozc-deps-changed] ]]; then
         log "updating mozc dependencies"
         python3 build_tools/update_deps.py
     fi
 
-    # TODO build with homebrew Qt6
-    if [[ ! -d third_party/qt || ! -f $PROJECT/revs/qt ]] \
-           || ! cmp -s $PROJECT/revs/qt third_party/qt_src/.tag; then
-        log "building qt"
-        python3 build_tools/build_qt.py --release --confirm_license
-        cp -f third_party/qt_src/.tag $PROJECT/revs/qt
+    local qt_path=""
+    local qt_rev=""
+    if $opts[brew-qt]; then
+        if ! brew list qt@6 >/dev/null 2>&1; then
+            error_exit "Qt is not Installed. Try 'brew install qt@6'."
+        fi
+        local brew_qt_path="$(brew --prefix qt@6)"
+        qt_path="$PROJECT/repos/brew_qt"
+        qt_rev="$(brew list --version qt@6)"
+        if [[ ! -d "$qt_path" \
+                  || ! -f "$PROJECT/revs/brew-qt" \
+                  || "$qt_rev" != "$(cat "$PROJECT/revs/brew-qt")" ]]; then
+
+            log "Copying Qt Frameworks (this may take a few seconds)..."
+
+            rm -rf "$qt_path"
+            mkdir -p "$qt_path/lib"
+            mkdir -p "$qt_path/plugins"
+            ln -sfn "$brew_qt_path/share/qt/libexec" "$qt_path/libexec"
+            ln -sfn "$brew_qt_path/include" "$qt_path/include"
+            cp -RL "$brew_qt_path"/lib/*.framework "$qt_path/lib/"
+            cp -RL "$brew_qt_path"/share/qt/plugins/* "$qt_path/plugins/"
+
+            echo "Stripping old signatures from Qt libraries..."
+            chmod -R +w "$qt_path/lib" "$qt_path/plugins"
+            find "$qt_path/lib" "$qt_path/plugins" \
+                 -type f \( -name "Qt*" -o -name "*.dylib" \) \
+                | xargs codesign --remove-signature 2>/dev/null || true
+
+            echo "$qt_rev" > "$PROJECT/revs/brew-qt"
+        else
+            log "Qt is up to date"
+        fi
     else
-        log "qt is up to date"
+        qt_path=third_party/qt
+        qt_rev="$(cat "$PROJECT/revs/qt")"
+
+        if [[ ! -d third_party/qt \
+                  || ! -f $PROJECT/revs/qt \
+                  || "$qt_rev" != "$(cat third_party/qt_src/.tag)" ]]; then
+            log "building Qt"
+            python3 build_tools/build_qt.py --release --confirm_license
+            cp -f third_party/qt_src/.tag $PROJECT/revs/qt
+        else
+            log "Qt is up to date"
+        fi
     fi
 
     git checkout data/dictionary_oss/dictionary00.txt
@@ -434,13 +435,13 @@ macos_mozc() {
         bazel_targets+=(//unix/emacs:mozc_emacs_helper)
     fi
 
-    log "start bazel build task"
-    MOZC_QT_PATH=${PWD}/third_party/qt \
-        npx bazel build $bazel_targets[*] \
+    MOZC_QT_PATH="$qt_path" \
+                bazelisk build $bazel_targets[@] \
                 --config oss_macos \
                 --config release_build \
         || bazel_error
-    npx bazel shutdown
+
+    bazelisk shutdown
 
     cp -f bazel-bin/mac/Mozc.pkg $PROJECT/dist
     if $opts[emacs]; then
@@ -464,7 +465,7 @@ linux_mozc() {
 
     if $opts[clean]; then
         log "cleanup bazel cache"
-        npx bazel clean --expunge
+        bazelisk clean --expunge
         python3 build_mozc.py clean
     fi
 
@@ -477,12 +478,14 @@ linux_mozc() {
     fi
     log "start bazel build task"
 
+
     # disable ccache
-    CC=/usr/bin/gcc CXX=/uer/bim/g++ \
-                    npx bazel build package \
-                    --config oss_linux --config release_build \
+    CC=/usr/bin/gcc \
+        CXX=/uer/bim/g++ \
+        bazelisk build package \
+        --config oss_linux --config release_build \
         || bazel_error
-    npx bazel shutdown
+    bazelisk shutdown
     log "bazel task finished successfully"
 
     cp  -f bazel-bin/unix/mozc.zip $PROJECT/dist
@@ -498,11 +501,18 @@ linux_mozc() {
 
 
 win_mozc() {
+    log "Setup windows tools..."
+    cd $stats[win-workspace]
+    win_cmd mise trust --yes
+    win_cmd mise run setup
+    log "windows: "$(win_cmd python --version)""
+    log "windows: bazelisk "$(win_cmd bazelisk --version)""
+
     cd $stats[win-workspace]/mozc/src
 
     if $opts[clean]; then
         log "cleanup mozc buid tree"
-        win_cmd npx bazel clean --expunge
+        win_cmd bazelisk clean --expunge
         win_cmd python3 build_mozc.py clean
     fi
 
@@ -512,11 +522,11 @@ win_mozc() {
     fi
 
     if [[ ! -d third_party/qt ]] \
-           || [[ ! -f $PROJECT/revs/qt ]] \
-           || ! cmp -s $PROJECT/revs/qt third_party/qt_src/.tag; then
+           || [[ ! -f "$PROJECT/revs/qt" ]] \
+           || ! cmp -s "$PROJECT/revs/qt" third_party/qt_src/.tag; then
         log "building qt"
         win_cmd python3 build_tools/build_qt.py --release --confirm_license
-        cp -f third_party/qt_src/.tag  $PROJECT/revs/qt
+        cp -f third_party/qt_src/.tag  "$PROJECT/revs/qt"
     fi
 
     git checkout data/dictionary_oss/dictionary00.txt
@@ -532,11 +542,9 @@ win_mozc() {
     if $opts[emacs]; then
         bazel_targets+=(//unix/emacs:mozc_emacs_helper)
     fi
-    win_cmd npx bazel build $bazel_targets[*] \
-            --config oss_windows \
-            --config release_build \
+    win_cmd "set ANDROID_NDK_HOME=& bazelisk build $bazel_targets[*] --config oss_windows --config release_build" \
         || bazel_error
-    win_cmd npx bazel shutdown
+    win_cmd bazelisk shutdown
 
     if $opts[emacs]; then
         cp -f bazel-bin/unix/emacs/mozc_emacs_helper.exe $stats[win-workspace]/dist
@@ -557,6 +565,7 @@ win_mozc() {
     fi
 }
 
+
 env
 opts "$@"
 
@@ -565,8 +574,10 @@ opts "$@"
 
 init
 repos
+activate_mise
 
 ut
+
 if $opts[for-win]; then
     win_mozc
 else
