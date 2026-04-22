@@ -4,6 +4,7 @@ python = "3.12"
 uv = "latest"
 
 [env]
+BAZELRC = "{{config_root}}/.bazelrc.user"
 _.python.venv = { path = ".venv", create = true }
 
 [tasks.setup]

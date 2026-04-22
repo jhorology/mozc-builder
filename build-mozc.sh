@@ -1,5 +1,7 @@
 #!/bin/zsh -eu
 
+export BAZEL_TRACK_IDLE_SECONDS=1
+
 PROJECT=$(dirname "$(realpath $0)")
 cd $PROJECT
 
@@ -44,8 +46,6 @@ for k in ${(@k)dict_opts}; do
     opts[$k]=${dict_opts[$k]}
 done
 
-local nodejs_version=v22
-
 alias win_cmd="/mnt/c/Windows/System32/cmd.exe /c"
 alias win_dev_cmd='/mnt/c/Windows/System32/cmd.exe /c call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" \&'
 local this_script=$(basename $0)
@@ -63,13 +63,13 @@ usage() {
           "    --update, --no-update                  Sync with remote git repositories. Default: $opts[update]" \
           "    --clean, --no-clean                    Clean build. Default: $opts[clean]" \
           "    --install, --no-install                Install mozc after build task. Default: $opts[install]" \
-          "    --brew-qt, --no-ibrew-qt               Build with Homebrew's Qt for macOS. Default: $opts[brew-qt]" \
+          "    --brew-qt, --no-brew-qt                Build with Homebrew's Qt for macOS. Default: $opts[brew-qt]" \
           "    --win-workspace=<dir>                  Location for build workspace for windows. Default: $opts[win-workspace]" \
           "                                           Relative path from USERPROFILE directory." \
           "    --alt-cannadic, --no-alt-cannadic      Enable additional alt-canna dictionary. Default: $opts[alt-cannadic]" \
           "    --edict2, --no-edict2                  Enable additional edict2 dictionary. Default: $opts[edict2]" \
           "    --jawiki, --no-jawiki                  Enable additional jawiki dictionary. Default: $opts[jawiki]" \
-          "    --neologd, --no-neolog                 Enable additional neolog dictionary. Default: $opts[neologd]" \
+          "    --neologd, --no-neologd                Enable additional neolog dictionary. Default: $opts[neologd]" \
           "    --personal-names, --no-personal-names  Enable additional alt-canna dictionary. Default: $opts[personal-names]" \
           "    --place-names, --no-place-names        Enable additional place-names dictionary. Default: $opts[place-names]" \
           "    --skk-jisyo, --no-skk-jisyo            Enable additional skk-jisyo dictionary. Default: $opts[skk-jisyo]" \
@@ -178,23 +178,12 @@ activate_mise() {
 
     cd $PROJECT
     mise trust --yes
+    eval "$(mise env --shell zsh)"
     mise run setup
-    eval "$(mise env)"
     log "mise activated"
-    log $(python --version)
-    log $(bazelisk --version)
-    log $(uv --version)
-}
-
-bazel_error() {
-    if $opts[for-win]; then
-        cd $stats[win-workspace]/mozc/src
-        win_cmd bazelisk shutdown
-    else
-        cd $PROJECT/repos/mozc/src
-        bazelisk shutdown
-    fi
-    exit 1
+    log "  " $(python --version)
+    log "  " $(bazelisk --version)
+    log "  " $(uv --version)
 }
 
 env() {
@@ -436,12 +425,10 @@ macos_mozc() {
     fi
 
     MOZC_QT_PATH="$qt_path" \
-                bazelisk build $bazel_targets[@] \
+                bazelisk build \
+                $bazel_targets[@] \
                 --config oss_macos \
-                --config release_build \
-        || bazel_error
-
-    bazelisk shutdown
+                --config release_build
 
     cp -f bazel-bin/mac/Mozc.pkg $PROJECT/dist
     if $opts[emacs]; then
@@ -483,9 +470,7 @@ linux_mozc() {
     CC=/usr/bin/gcc \
         CXX=/uer/bim/g++ \
         bazelisk build package \
-        --config oss_linux --config release_build \
-        || bazel_error
-    bazelisk shutdown
+        --config oss_linux --config release_build
     log "bazel task finished successfully"
 
     cp  -f bazel-bin/unix/mozc.zip $PROJECT/dist
@@ -542,9 +527,7 @@ win_mozc() {
     if $opts[emacs]; then
         bazel_targets+=(//unix/emacs:mozc_emacs_helper)
     fi
-    win_cmd "set ANDROID_NDK_HOME=& bazelisk build $bazel_targets[*] --config oss_windows --config release_build" \
-        || bazel_error
-    win_cmd bazelisk shutdown
+    win_cmd "set ANDROID_NDK_HOME=& bazelisk build $bazel_targets[*] --config oss_windows --config release_build"
 
     if $opts[emacs]; then
         cp -f bazel-bin/unix/emacs/mozc_emacs_helper.exe $stats[win-workspace]/dist
