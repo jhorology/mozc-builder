@@ -269,6 +269,7 @@ init() {
         mkdir -p $stats[win-workspace]
         mkdir -p $stats[win-workspace]/dist
         cp -f "$PROJECT/.mise.toml" $stats[win-workspace]
+        cp -f "$PROJECT/.bazelrc.user" $stats[win-workspace]
     fi
 }
 
