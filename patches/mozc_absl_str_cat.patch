@@ -1,0 +1,12 @@
+diff --git a/src/base/system_util.cc b/src/base/system_util.cc
+index a2f4406..39d9378 100644
+--- a/src/base/system_util.cc
++++ b/src/base/system_util.cc
+@@ -38,6 +38,7 @@
+ #include "absl/status/status.h"
+ #include "absl/strings/string_view.h"
+ #include "absl/synchronization/mutex.h"
++#include "absl/strings/str_cat.h"
+ #include "base/const.h"
+ #include "base/environ.h"
+ #include "base/port.h"

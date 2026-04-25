@@ -131,6 +131,11 @@ repo() {
                 has_changed=true
             fi
 
+            for patch in $PROJECT/patches/${repo:t}_*.patch(N); do
+                log "applying patch: $patch"
+                git apply -3 --verbose $patch
+            done
+
             cd -
         fi
     else
