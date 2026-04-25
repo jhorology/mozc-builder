@@ -1,8 +1,8 @@
 diff --git a/src/renderer/mac/CandidateView.mm b/src/renderer/mac/CandidateView.mm
-index f56d566..aebe025 100644
+index f56d566..0e446cf 100644
 --- a/src/renderer/mac/CandidateView.mm
 +++ b/src/renderer/mac/CandidateView.mm
-@@ -1,94 +1,37 @@
+@@ -1,94 +1,38 @@
 -// Copyright 2010-2021, Google Inc.
 -// All rights reserved.
 -//
@@ -44,6 +44,7 @@ index f56d566..aebe025 100644
 -#include "client/client_interface.h"
  #include "protocol/commands.pb.h"
 -#include "protocol/renderer_style.pb.h"
++#include "client/client_interface.h"
  #include "renderer/mac/mac_view_util.h"
 -#include "renderer/renderer_style_handler.h"
  #include "renderer/table_layout.h"
@@ -63,15 +64,15 @@ index f56d566..aebe025 100644
 -// Private method declarations.
 -@interface CandidateView ()
 -- (void)initializeDefaultStyle;
--
--// Draw the |row|-th row.
--- (void)drawRow:(int)row;
 +// === adjust layout ====
 +#define MOZC_CANDIDATE_FONT_SIZE     18.0
-+#define MOZC_SHORTCUT_FONT_SIZE      10.0
++#define MOZC_SHORTCUT_FONT_SIZE      11.0
 +#define MOZC_DESCRIPTION_FONT_SIZE   14.0
 +#define MOZC_FOOTER_FONT_SIZE        13.0
  
+-// Draw the |row|-th row.
+-- (void)drawRow:(int)row;
+-
 -// Draw footer
 -- (void)drawFooter;
 -
@@ -84,7 +85,7 @@ index f56d566..aebe025 100644
 +#define MOZC_ROW_PADDING_Y           2.0   // vertical row margin
 +#define MOZC_HIGHLIGHT_INSET_X       4.0   // highlight horizontal inset
 +#define MOZC_HIGHLIGHT_INSET_Y       1.0   // highlight vertical inset
-+// =====================
++// ======================
  
  @implementation CandidateView {
    const NSImage *logoImage_;
@@ -109,7 +110,7 @@ index f56d566..aebe025 100644
  - (id)initWithFrame:(NSRect)frame {
    self = [super initWithFrame:frame];
    if (self) {
-@@ -99,177 +42,81 @@ using mozc::renderer::mac::MacViewUtil;
+@@ -99,177 +43,81 @@ using mozc::renderer::mac::MacViewUtil;
  }
  
  - (void)initializeDefaultStyle {
@@ -198,13 +199,7 @@ index f56d566..aebe025 100644
 +                              NSForegroundColorAttributeName: [NSColor secondaryLabelColor] };
  
 -    const mozc::commands::Footer &footer = candidate_window_.footer();
-+  NSMutableArray *newCache = [NSMutableArray array];
-+  for (int i = 0; i < candidate_window_.candidate_size(); ++i) {
-+    const auto &c = candidate_window_.candidate(i);
-+    std::string val = c.value();
-+    if (c.annotation().has_prefix()) val.insert(0, c.annotation().prefix());
-+    if (c.annotation().has_suffix()) val.append(c.annotation().suffix());
- 
+-
 -    if (footer.has_label()) {
 -      const NSAttributedString *footerLabel =
 -          MacViewUtil::ToNSAttributedString(footer.label(), style_.footer_style());
@@ -213,9 +208,12 @@ index f56d566..aebe025 100644
 -      footerSize.width += footerLabelSize.width;
 -      footerSize.height = std::max(footerSize.height, footerLabelSize.height);
 -    }
-+    NSAttributedString *s = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:c.annotation().shortcut().c_str()] attributes:attrShortcut];
-+    NSAttributedString *v = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:val.c_str()] attributes:attrCandidate];
-+    NSAttributedString *d = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:c.annotation().description().c_str()] attributes:attrDesc];
++  NSMutableArray *newCache = [NSMutableArray array];
++  for (int i = 0; i < candidate_window_.candidate_size(); ++i) {
++    const auto &c = candidate_window_.candidate(i);
++    std::string val = c.value();
++    if (c.annotation().has_prefix()) val.insert(0, c.annotation().prefix());
++    if (c.annotation().has_suffix()) val.append(c.annotation().suffix());
  
 -    if (footer.has_sub_label()) {
 -      const NSAttributedString *footerSubLabel =
@@ -225,18 +223,18 @@ index f56d566..aebe025 100644
 -      footerSize.width += footerSubLabelSize.width;
 -      footerSize.height = std::max(footerSize.height, footerSubLabelSize.height);
 -    }
-+    NSSize sSize = [s size]; sSize.width += MOZC_WINDOW_PADDING_X;
-+    NSSize vSize = [v size]; vSize.width += MOZC_MARGIN_NO_TO_CAND;
-+    NSSize dSize = [d size]; dSize.width += MOZC_MARGIN_CAND_TO_DESC + MOZC_WINDOW_PADDING_X;
++    NSAttributedString *s = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:c.annotation().shortcut().c_str()] attributes:attrShortcut];
++    NSAttributedString *v = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:val.c_str()] attributes:attrCandidate];
++    NSAttributedString *d = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:c.annotation().description().c_str()] attributes:attrDesc];
  
 -    if (footer.logo_visible() && logoImage_) {
 -      const NSSize logoSize = [logoImage_ size];
 -      footerSize.width += logoSize.width;
 -      footerSize.height = std::max(footerSize.height, logoSize.height);
 -    }
-+    tableLayout_.EnsureCellSize(COLUMN_SHORTCUT, MacViewUtil::ToSize(sSize));
-+    tableLayout_.EnsureCellSize(COLUMN_CANDIDATE, MacViewUtil::ToSize(vSize));
-+    tableLayout_.EnsureCellSize(COLUMN_DESCRIPTION, MacViewUtil::ToSize(dSize));
++    NSSize sSize = [s size]; sSize.width += MOZC_WINDOW_PADDING_X;
++    NSSize vSize = [v size]; vSize.width += MOZC_MARGIN_NO_TO_CAND;
++    NSSize dSize = [d size]; dSize.width += MOZC_MARGIN_CAND_TO_DESC + MOZC_WINDOW_PADDING_X;
  
 -    if (footer.index_visible()) {
 -      const int focusedIndex = candidate_window_.focused_index();
@@ -250,18 +248,21 @@ index f56d566..aebe025 100644
 -      footerSize.width += footerIndexSize.width;
 -      footerSize.height = std::max(footerSize.height, footerIndexSize.height);
 -    }
--
++    tableLayout_.EnsureCellSize(COLUMN_SHORTCUT, MacViewUtil::ToSize(sSize));
++    tableLayout_.EnsureCellSize(COLUMN_CANDIDATE, MacViewUtil::ToSize(vSize));
++    tableLayout_.EnsureCellSize(COLUMN_DESCRIPTION, MacViewUtil::ToSize(dSize));
+ 
 -    footerSize.height += style_.footer_border_colors_size();
 -    tableLayout_.EnsureFooterSize(MacViewUtil::ToSize(footerSize));
--  }
--
--  tableLayout_.SetRowRectPadding(style_.row_rect_padding());
--  if (candidate_window_.candidate_size() < candidate_window_.size()) {
--    tableLayout_.SetVScrollBar(style_.scrollbar_width());
 +    NSAttributedString *empty = [[NSAttributedString alloc] initWithString:@""];
 +    [newCache addObject:@[s, empty, v, d]];
    }
  
+-  tableLayout_.SetRowRectPadding(style_.row_rect_padding());
+-  if (candidate_window_.candidate_size() < candidate_window_.size()) {
+-    tableLayout_.SetVScrollBar(style_.scrollbar_width());
+-  }
+-
 -  const NSAttributedString *gap1 =
 -      MacViewUtil::ToNSAttributedString(" ", style_.text_styles(COLUMN_GAP1));
 -  tableLayout_.EnsureCellSize(COLUMN_GAP1, MacViewUtil::ToSize([gap1 size]));
@@ -332,7 +333,7 @@ index f56d566..aebe025 100644
  
    for (int i = 0; i < candidate_window_.candidate_size(); ++i) {
      [self drawRow:i];
-@@ -279,202 +126,95 @@ using mozc::renderer::mac::MacViewUtil;
+@@ -279,202 +127,118 @@ using mozc::renderer::mac::MacViewUtil;
      [self drawVScrollBar];
    }
    [self drawFooter];
@@ -370,20 +371,50 @@ index f56d566..aebe025 100644
 -        [NSBezierPath fillRect:MacViewUtil::ToNSRect(cellRect)];
 -      }
 -    }
--  }
--
++  NSRect rowRect = MacViewUtil::ToNSRect(tableLayout_.GetRowRect(row));
++  BOOL isFocused = (row == focusedRow_);
++
++  if (isFocused) {
++    [[NSColor selectedContentBackgroundColor] set];
++    NSRect highlightRect = NSInsetRect(rowRect, MOZC_HIGHLIGHT_INSET_X, MOZC_HIGHLIGHT_INSET_Y);
++    [[NSBezierPath bezierPathWithRoundedRect:highlightRect xRadius:5.0 yRadius:5.0] fill];
+   }
+ 
 -  NSArray *candidate = [candidateStringsCache_ objectAtIndex:row];
--  for (int i = COLUMN_SHORTCUT; i < NUMBER_OF_COLUMNS; ++i) {
++  NSArray *cells = [candidateStringsCache_ objectAtIndex:row];
+   for (int i = COLUMN_SHORTCUT; i < NUMBER_OF_COLUMNS; ++i) {
 -    const NSAttributedString *text = [candidate objectAtIndex:i];
--    NSRect cellRect = MacViewUtil::ToNSRect(tableLayout_.GetCellRect(row, i));
++    if (i >= [cells count]) break;
++    NSAttributedString *text = [cells objectAtIndex:i];
++    if ([text length] == 0) continue;
++
++    if (isFocused) {
++      NSMutableAttributedString *mut = [text mutableCopy];
++      [mut addAttribute:NSForegroundColorAttributeName value:[NSColor alternateSelectedControlTextColor] range:NSMakeRange(0, mut.length)];
++      text = mut;
++    }
++
+     NSRect cellRect = MacViewUtil::ToNSRect(tableLayout_.GetCellRect(row, i));
 -    NSPoint &candidatePosition = cellRect.origin;
 -    // Adjust the positions
 -    candidatePosition.x += style_.text_styles(i).left_padding();
 -    candidatePosition.y += (cellRect.size.height - [text size].height) / 2;
 -    [text drawAtPoint:candidatePosition];
--  }
--
--  if (candidate_window_.candidate(row).has_information_id()) {
++    NSPoint p = cellRect.origin;
++
++    if (i == COLUMN_SHORTCUT) {
++      p.x += MOZC_WINDOW_PADDING_X;
++    } else if (i == COLUMN_CANDIDATE) {
++      p.x += MOZC_MARGIN_NO_TO_CAND;
++    } else if (i == COLUMN_DESCRIPTION) {
++      p.x += MOZC_MARGIN_CAND_TO_DESC;
++    }
++
++    p.y += (cellRect.size.height - [text size].height) / 2;
++    [text drawAtPoint:p];
+   }
+ 
+   if (candidate_window_.candidate(row).has_information_id()) {
 -    NSRect rect = MacViewUtil::ToNSRect(tableLayout_.GetRowRect(row));
 -    [MacViewUtil::ToNSColor(style_.focused_border_color()) set];
 -    rect.origin.x += rect.size.width - 6.0;
@@ -391,21 +422,41 @@ index f56d566..aebe025 100644
 -    rect.origin.y += 2.0;
 -    rect.size.height -= 4.0;
 -    [NSBezierPath fillRect:rect];
--  }
--}
-+  NSRect rowRect = MacViewUtil::ToNSRect(tableLayout_.GetRowRect(row));
-+  BOOL isFocused = (row == focusedRow_);
++    [[NSColor controlAccentColor] set];
++    NSRect infoRect = NSMakeRect(rowRect.origin.x + rowRect.size.width - 8.0,
++                                 rowRect.origin.y + 4.0, 3.0, rowRect.size.height - 8.0);
++    [[NSBezierPath bezierPathWithRoundedRect:infoRect xRadius:1.5 yRadius:1.5] fill];
+   }
+ }
  
--- (void)drawFooter {
++- (void)drawVScrollBar {
++  const mozc::Rect vscrollRect = tableLayout_.GetVScrollBarRect();
++  if (vscrollRect.IsRectEmpty()) return;
++
++  const int beginIndex = candidate_window_.candidate(0).index();
++  const int candidatesTotal = candidate_window_.size();
++  const int endIndex = candidate_window_.candidate(candidate_window_.candidate_size() - 1).index();
++
++  [[NSColor tertiaryLabelColor] set];
++  NSRect scrollBg = MacViewUtil::ToNSRect(vscrollRect);
++  scrollBg.origin.x -= 2.0;
++  [[NSBezierPath bezierPathWithRoundedRect:scrollBg xRadius:2.0 yRadius:2.0] fill];
++
++  const mozc::Rect indicatorRect = tableLayout_.GetVScrollIndicatorRect(beginIndex, endIndex, candidatesTotal);
++  NSRect indicatorNsRect = MacViewUtil::ToNSRect(indicatorRect);
++  indicatorNsRect.origin.x -= 2.0;
++  [[NSColor secondaryLabelColor] set];
++  [[NSBezierPath bezierPathWithRoundedRect:indicatorNsRect xRadius:2.0 yRadius:2.0] fill];
++}
++
+ - (void)drawFooter {
 -  if (!candidate_window_.has_footer()) {
 -    return;
-+  if (isFocused) {
-+    [[NSColor selectedContentBackgroundColor] set];
-+    NSRect highlightRect = NSInsetRect(rowRect, MOZC_HIGHLIGHT_INSET_X, MOZC_HIGHLIGHT_INSET_Y);
-+    [[NSBezierPath bezierPathWithRoundedRect:highlightRect xRadius:5.0 yRadius:5.0] fill];
-   }
+-  }
 -  const mozc::commands::Footer &footer = candidate_window_.footer();
--  NSRect footerRect = MacViewUtil::ToNSRect(tableLayout_.GetFooterRect());
++  if (!candidate_window_.has_footer()) return;
++  const auto &footer = candidate_window_.footer();
+   NSRect footerRect = MacViewUtil::ToNSRect(tableLayout_.GetFooterRect());
  
 -  // Draw footer border
 -  for (int i = 0; i < style_.footer_border_colors_size(); ++i) {
@@ -437,20 +488,11 @@ index f56d566..aebe025 100644
 -    footerRect.origin.x += logoSize.width;
 -    footerRect.size.width -= logoSize.width;
 -  }
-+  NSArray *cells = [candidateStringsCache_ objectAtIndex:row];
-+  for (int i = COLUMN_SHORTCUT; i < NUMBER_OF_COLUMNS; ++i) {
-+    if (i >= [cells count]) break;
-+    NSAttributedString *text = [cells objectAtIndex:i];
-+    if ([text length] == 0) continue;
-+
-+    if (isFocused) {
-+      NSMutableAttributedString *mut = [text mutableCopy];
-+      [mut addAttribute:NSForegroundColorAttributeName value:[NSColor alternateSelectedControlTextColor] range:NSMakeRange(0, mut.length)];
-+      text = mut;
-+    }
++  NSDictionary *attr = @{ NSFontAttributeName: [NSFont systemFontOfSize:MOZC_FOOTER_FONT_SIZE],
++                          NSForegroundColorAttributeName: [NSColor secondaryLabelColor] };
  
 -  // Draw label
--  if (footer.has_label()) {
+   if (footer.has_label()) {
 -    const NSAttributedString *footerLabel =
 -        MacViewUtil::ToNSAttributedString(footer.label(), style_.footer_style());
 -    footerRect.origin.x += style_.footer_style().left_padding();
@@ -458,17 +500,9 @@ index f56d566..aebe025 100644
 -    NSPoint labelPosition = footerRect.origin;
 -    labelPosition.y += (footerRect.size.height - labelSize.height) / 2;
 -    [footerLabel drawAtPoint:labelPosition];
--  }
-+    NSRect cellRect = MacViewUtil::ToNSRect(tableLayout_.GetCellRect(row, i));
-+    NSPoint p = cellRect.origin;
-+
-+    if (i == COLUMN_SHORTCUT) {
-+      p.x += MOZC_WINDOW_PADDING_X;
-+    } else if (i == COLUMN_CANDIDATE) {
-+      p.x += MOZC_MARGIN_NO_TO_CAND;
-+    } else if (i == COLUMN_DESCRIPTION) {
-+      p.x += MOZC_MARGIN_CAND_TO_DESC;
-+    }
++    NSAttributedString *s = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:footer.label().c_str()] attributes:attr];
++    [s drawAtPoint:NSMakePoint(footerRect.origin.x + MOZC_WINDOW_PADDING_X, footerRect.origin.y + (footerRect.size.height - [s size].height)/2)];
+   }
  
 -  // Draw sub_label
 -  if (footer.has_sub_label()) {
@@ -479,12 +513,10 @@ index f56d566..aebe025 100644
 -    NSPoint subLabelPosition = footerRect.origin;
 -    subLabelPosition.y += (footerRect.size.height - subLabelSize.height) / 2;
 -    [footerSubLabel drawAtPoint:subLabelPosition];
-+    p.y += (cellRect.size.height - [text size].height) / 2;
-+    [text drawAtPoint:p];
-   }
- 
+-  }
+-
 -  // Draw footer index (e.g. "10/120")
--  if (footer.index_visible()) {
+   if (footer.index_visible()) {
 -    const std::string footerIndex =
 -        absl::StrFormat("%d/%d",
 -                        candidate_window_.focused_index() + 1,  // +1 to 1-origin from 0-origin.
@@ -496,69 +528,56 @@ index f56d566..aebe025 100644
 -    footerPosition.x = footerPosition.x + footerRect.size.width - footerSize.width -
 -                        style_.footer_style().right_padding();
 -    [footerAttributedIndex drawAtPoint:footerPosition];
-+  if (candidate_window_.candidate(row).has_information_id()) {
-+    [[NSColor controlAccentColor] set];
-+    NSRect infoRect = NSMakeRect(rowRect.origin.x + rowRect.size.width - 8.0,
-+                                 rowRect.origin.y + 4.0, 3.0, rowRect.size.height - 8.0);
-+    [[NSBezierPath bezierPathWithRoundedRect:infoRect xRadius:1.5 yRadius:1.5] fill];
++    NSString *idx = [NSString stringWithFormat:@"%d/%d", candidate_window_.focused_index() + 1, candidate_window_.size()];
++    NSAttributedString *s = [[NSAttributedString alloc] initWithString:idx attributes:attr];
++    [s drawAtPoint:NSMakePoint(footerRect.origin.x + footerRect.size.width - [s size].width - MOZC_WINDOW_PADDING_X, footerRect.origin.y + (footerRect.size.height - [s size].height)/2)];
    }
  }
  
- - (void)drawVScrollBar {
-   const mozc::Rect vscrollRect = tableLayout_.GetVScrollBarRect();
+-- (void)drawVScrollBar {
+-  const mozc::Rect vscrollRect = tableLayout_.GetVScrollBarRect();
 -  if (vscrollRect.IsRectEmpty() || candidate_window_.candidate_size() <= 0) {
 -    return;
 -  }
-+  if (vscrollRect.IsRectEmpty()) return;
- 
-   const int beginIndex = candidate_window_.candidate(0).index();
-   const int candidatesTotal = candidate_window_.size();
-   const int endIndex = candidate_window_.candidate(candidate_window_.candidate_size() - 1).index();
+-
+-  const int beginIndex = candidate_window_.candidate(0).index();
+-  const int candidatesTotal = candidate_window_.size();
+-  const int endIndex = candidate_window_.candidate(candidate_window_.candidate_size() - 1).index();
++- (void)mouseDown:(NSEvent *)theEvent {
++  NSPoint p = [self convertPoint:[theEvent locationInWindow] fromView:nil];
  
 -  [MacViewUtil::ToNSColor(style_.scrollbar_background_color()) set];
 -  [NSBezierPath fillRect:MacViewUtil::ToNSRect(vscrollRect)];
-+  [[NSColor tertiaryLabelColor] set];
-+  NSRect scrollBg = MacViewUtil::ToNSRect(vscrollRect);
-+  scrollBg.origin.x -= 2.0;
-+  [[NSBezierPath bezierPathWithRoundedRect:scrollBg xRadius:2.0 yRadius:2.0] fill];
- 
+-
 -  const mozc::Rect indicatorRect =
 -      tableLayout_.GetVScrollIndicatorRect(beginIndex, endIndex, candidatesTotal);
 -  [MacViewUtil::ToNSColor(style_.scrollbar_indicator_color()) set];
 -  [NSBezierPath fillRect:MacViewUtil::ToNSRect(indicatorRect)];
-+  const mozc::Rect indicatorRect = tableLayout_.GetVScrollIndicatorRect(beginIndex, endIndex, candidatesTotal);
-+  NSRect indicatorNsRect = MacViewUtil::ToNSRect(indicatorRect);
-+  indicatorNsRect.origin.x -= 2.0;
-+  [[NSColor secondaryLabelColor] set];
-+  [[NSBezierPath bezierPathWithRoundedRect:indicatorNsRect xRadius:2.0 yRadius:2.0] fill];
- }
- 
+-}
+-
 -#pragma mark event handling callbacks
 -
 -- (void)mouseDown:(NSEvent *)event {
 -  const mozc::Point localPos = MacViewUtil::ToPoint([self convertPoint:[event locationInWindow]
 -                                                              fromView:nil]);
--  int clickedRow = -1;
+   int clickedRow = -1;
 -  for (int i = 0; i < tableLayout_.number_of_rows(); ++i) {
 -    const mozc::Rect rowRect = tableLayout_.GetRowRect(i);
 -    if (rowRect.PtrInRect(localPos)) {
--      clickedRow = i;
--      break;
--    }
--  }
-+- (void)drawFooter {
-+  if (!candidate_window_.has_footer()) return;
-+  const auto &footer = candidate_window_.footer();
-+  NSRect footerRect = MacViewUtil::ToNSRect(tableLayout_.GetFooterRect());
++  for (int i = 0; i < candidate_window_.candidate_size(); ++i) {
++    NSRect rowRect = MacViewUtil::ToNSRect(tableLayout_.GetRowRect(i));
++    if (NSPointInRect(p, rowRect)) {
+       clickedRow = i;
+       break;
+     }
+   }
  
 -  if (clickedRow >= 0 && clickedRow != focusedRow_) {
 -    focusedRow_ = clickedRow;
 -    [self setNeedsDisplay:YES];
 -  }
 -}
-+  NSDictionary *attr = @{ NSFontAttributeName: [NSFont systemFontOfSize:MOZC_FOOTER_FONT_SIZE],
-+                          NSForegroundColorAttributeName: [NSColor secondaryLabelColor] };
- 
+-
 -- (void)mouseUp:(NSEvent *)event {
 -  const mozc::Point localPos = MacViewUtil::ToPoint([self convertPoint:[event locationInWindow]
 -                                                              fromView:nil]);
@@ -567,10 +586,7 @@ index f56d566..aebe025 100644
 -  }
 -  if (candidate_window_.candidate_size() < tableLayout_.number_of_rows()) {
 -    return;
-+  if (footer.has_label()) {
-+    NSAttributedString *s = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:footer.label().c_str()] attributes:attr];
-+    [s drawAtPoint:NSMakePoint(footerRect.origin.x + MOZC_WINDOW_PADDING_X, footerRect.origin.y + (footerRect.size.height - [s size].height)/2)];
-   }
+-  }
 -  for (int i = 0; i < tableLayout_.number_of_rows(); ++i) {
 -    const mozc::Rect rowRect = tableLayout_.GetRowRect(i);
 -    if (rowRect.PtrInRect(localPos)) {
@@ -578,14 +594,15 @@ index f56d566..aebe025 100644
 -      command.set_type(SessionCommand::SELECT_CANDIDATE);
 -      command.set_id(candidate_window_.candidate(i).id());
 -      Output dummy_output;
--      command_sender_->SendCommand(command, &dummy_output);
++  if (clickedRow >= 0 && clickedRow < candidate_window_.candidate_size()) {
++    if (command_sender_) {
++      mozc::commands::SessionCommand command;
++      command.set_type(mozc::commands::SessionCommand::SELECT_CANDIDATE);
++      command.set_id(candidate_window_.candidate(clickedRow).id());
++      mozc::commands::Output dummy_output;
+       command_sender_->SendCommand(command, &dummy_output);
 -      break;
--    }
-+
-+  if (footer.index_visible()) {
-+    NSString *idx = [NSString stringWithFormat:@"%d/%d", candidate_window_.focused_index() + 1, candidate_window_.size()];
-+    NSAttributedString *s = [[NSAttributedString alloc] initWithString:idx attributes:attr];
-+    [s drawAtPoint:NSMakePoint(footerRect.origin.x + footerRect.size.width - [s size].width - MOZC_WINDOW_PADDING_X, footerRect.origin.y + (footerRect.size.height - [s size].height)/2)];
+     }
    }
  }
  
