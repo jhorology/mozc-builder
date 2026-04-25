@@ -1,1 +1,5 @@
 startup --max_idle_secs=1
+
+# workaround for QTBUG-145239 on M1-3 Mac
+build:macos_env --cxxopt="-Wno-error=implicit-function-declaration"
+build:macos_env --host_cxxopt="-Wno-error=implicit-function-declaration"
