@@ -444,11 +444,21 @@ macos_mozc() {
     cd -
 
     if $opts[install]; then
+
         log "installing mozc"
+        [[ -f /Library/LaunchAgents/org.mozc.inputmethod.Japanese.Renderer.plist ]] && \
+            launchctl unload /Library/LaunchAgents/org.mozc.inputmethod.Japanese.Renderer.plist
+        [[ -f /Library/LaunchAgents/org.mozc.inputmethod.Japanese.Converter.plist ]] && \
+            launchctl unload /Library/LaunchAgents/org.mozc.inputmethod.Japanese.Converter.plist
+
         if $opts[emacs]; then
             cp -f $PROJECT/dist/mozc_emacs_helper ~/.local/bin
         fi
         sudo installer -pkg $PROJECT/dist/Mozc.pkg -target /
+
+        launchctl load /Library/LaunchAgents/org.mozc.inputmethod.Japanese.Converter.plist
+        launchctl load /Library/LaunchAgents/org.mozc.inputmethod.Japanese.Renderer.plist
+
         log "installation finished successfully"
     fi
 }
