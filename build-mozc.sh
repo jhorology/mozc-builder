@@ -366,7 +366,7 @@ macos_mozc() {
 
     if [[ -n $stats[(i)mozc-deps-changed] ]]; then
         log "updating mozc dependencies"
-        python3 build_tools/update_deps.py
+        python build_tools/update_deps.py
     fi
 
     local qt_path=""
@@ -410,7 +410,7 @@ macos_mozc() {
                   || ! -f $PROJECT/revs/qt \
                   || "$qt_rev" != "$(cat third_party/qt_src/.tag)" ]]; then
             log "building Qt"
-            python3 build_tools/build_qt.py --release --confirm_license
+            python build_tools/build_qt.py --release --confirm_license
             cp -f third_party/qt_src/.tag $PROJECT/revs/qt
         else
             log "Qt is up to date"
@@ -469,7 +469,7 @@ linux_mozc() {
     if $opts[clean]; then
         log "cleanup bazel cache"
         bazelisk clean --expunge
-        python3 build_mozc.py clean
+        python build_mozc.py clean
     fi
 
     git checkout data/dictionary_oss/dictionary00.txt
@@ -514,19 +514,19 @@ win_mozc() {
     if $opts[clean]; then
         log "cleanup mozc buid tree"
         win_cmd bazelisk clean --expunge
-        win_cmd python3 build_mozc.py clean
+        win_cmd python build_mozc.py clean
     fi
 
     if [[ ! -d third_party/llvm || -n $stats[(i)mozc-deps-changed] ]]; then
         log "updating mozc dependencies"
-        win_cmd python3 build_tools/update_deps.py
+        win_cmd python build_tools/update_deps.py
     fi
 
     if [[ ! -d third_party/qt ]] \
            || [[ ! -f "$PROJECT/revs/qt" ]] \
            || ! cmp -s "$PROJECT/revs/qt" third_party/qt_src/.tag; then
         log "building qt"
-        win_cmd python3 build_tools/build_qt.py --release --confirm_license
+        win_cmd pythony build_tools/build_qt.py --release --confirm_license
         cp -f third_party/qt_src/.tag  "$PROJECT/revs/qt"
     fi
 
