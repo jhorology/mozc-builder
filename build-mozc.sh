@@ -526,7 +526,7 @@ win_mozc() {
            || [[ ! -f "$PROJECT/revs/qt" ]] \
            || ! cmp -s "$PROJECT/revs/qt" third_party/qt_src/.tag; then
         log "building qt"
-        win_cmd pythony build_tools/build_qt.py --release --confirm_license
+        win_cmd python build_tools/build_qt.py --release --confirm_license
         cp -f third_party/qt_src/.tag  "$PROJECT/revs/qt"
     fi
 
