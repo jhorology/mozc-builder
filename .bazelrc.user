@@ -3,3 +3,9 @@ startup --max_idle_secs=1
 # workaround for QTBUG-145239 on M1-3 Mac
 build:macos_env --cxxopt="-Wno-error=implicit-function-declaration"
 build:macos_env --host_cxxopt="-Wno-error=implicit-function-declaration"
+
+
+build:oss_windows --action_env=ANDROID_NDK_HOME=
+
+# workaround for build_installer.exe: Permission denied on windows
+build:oss_windows --action_env=__COMPAT_LAYER=RunAsInvoker

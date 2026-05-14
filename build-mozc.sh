@@ -469,7 +469,7 @@ linux_mozc() {
     if $opts[clean]; then
         log "cleanup bazel cache"
         bazelisk clean --expunge
-        python build_mozc.py clean
+        # python build_mozc.py clean
     fi
 
     git checkout data/dictionary_oss/dictionary00.txt
@@ -514,7 +514,7 @@ win_mozc() {
     if $opts[clean]; then
         log "cleanup mozc buid tree"
         win_cmd bazelisk clean --expunge
-        win_cmd python build_mozc.py clean
+        # win_cmd python build_mozc.py clean
     fi
 
     if [[ ! -d third_party/llvm || -n $stats[(i)mozc-deps-changed] ]]; then
@@ -543,7 +543,7 @@ win_mozc() {
     if $opts[emacs]; then
         bazel_targets+=(//unix/emacs:mozc_emacs_helper)
     fi
-    win_cmd "set ANDROID_NDK_HOME=& bazelisk build $bazel_targets[*] --config oss_windows --config release_build"
+    win_cmd "bazelisk build $bazel_targets[*] --config oss_windows --config release_build"
 
     if $opts[emacs]; then
         cp -f bazel-bin/unix/emacs/mozc_emacs_helper.exe $stats[win-workspace]/dist
