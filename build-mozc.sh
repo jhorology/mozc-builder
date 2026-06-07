@@ -19,6 +19,8 @@ declare -A build_bool_opts=(
     [emacs]=true
     [install]=false
     [brew-qt]=true
+    [brew-qt]=true
+    [macos-modern]=true
 )
 
 declare -A build_value_opts=(
@@ -66,6 +68,7 @@ usage() {
           "    --brew-qt, --no-brew-qt                Build with Homebrew's Qt for macOS. Default: $opts[brew-qt]" \
           "    --win-workspace=<dir>                  Location for build workspace for windows. Default: $opts[win-workspace]" \
           "                                           Relative path from USERPROFILE directory." \
+          "    --macos-modern, --no-macos-modern      Modern appearance for candidate window"
           "    --alt-cannadic, --no-alt-cannadic      Enable additional alt-canna dictionary. Default: $opts[alt-cannadic]" \
           "    --edict2, --no-edict2                  Enable additional edict2 dictionary. Default: $opts[edict2]" \
           "    --jawiki, --no-jawiki                  Enable additional jawiki dictionary. Default: $opts[jawiki]" \
@@ -423,6 +426,13 @@ macos_mozc() {
         ls -l data/dictionary_oss/dictionary00.txt
         cat $PROJECT/dist/mozcdic-ut.txt >> data/dictionary_oss/dictionary00.txt
         ls -l data/dictionary_oss/dictionary00.txt
+    fi
+
+    if $opts[macos-modern]; then
+      cp $PROJECT/assets/macos_appearance/CandidateView.mm renderer/mac
+      cp $PROJECT/assets/macos_appearance/CandidateWindow.mm renderer/mac
+      cp $PROJECT/assets/macos_appearance/InfoListView.mm renderer/mac
+      cp $PROJECT/assets/macos_appearance/InfoListWIndow.mm renderer/mac
     fi
 
     local bazel_targets=(package)
