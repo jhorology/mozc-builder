@@ -21,6 +21,7 @@ declare -A build_bool_opts=(
   [brew-qt]=true
   [brew-qt]=true
   [macos-modern]=true
+  [win-modern]=true
 )
 
 declare -A build_value_opts=(
@@ -68,7 +69,8 @@ usage() {
         "    --brew-qt, --no-brew-qt                Build with Homebrew's Qt for macOS. Default: $opts[brew-qt]" \
         "    --win-workspace=<dir>                  Location for build workspace for windows. Default: $opts[win-workspace]" \
         "                                           Relative path from USERPROFILE directory." \
-        "    --macos-modern, --no-macos-modern      Modern appearance for candidate window"
+        "    --macos-modern, --no-macos-modern      Modern appearance for candidate window (macOS). Default: $opts[macos-modern]" \
+        "    --win-modern, --no-win-modern          Modern appearance for candidate window (Windows). Default: $opts[win-modern]" \
   "    --alt-cannadic, --no-alt-cannadic      Enable additional alt-canna dictionary. Default: $opts[alt-cannadic]" \
     "    --edict2, --no-edict2                  Enable additional edict2 dictionary. Default: $opts[edict2]" \
     "    --jawiki, --no-jawiki                  Enable additional jawiki dictionary. Default: $opts[jawiki]" \
@@ -431,8 +433,8 @@ macos_mozc() {
   if $opts[macos-modern]; then
     cp $PROJECT/assets/macos_appearance/CandidateView.mm renderer/mac
     cp $PROJECT/assets/macos_appearance/CandidateWindow.mm renderer/mac
-    cp $PROJECT/assets/macos_appearance/InfoListView.mm renderer/mac
-    cp $PROJECT/assets/macos_appearance/InfoListWIndow.mm renderer/mac
+    cp $PROJECT/assets/macos_appearance/InfolistView.mm renderer/mac
+    cp $PROJECT/assets/macos_appearance/InfolistWindow.mm renderer/mac
   fi
 
   local bazel_targets=(package)
@@ -548,6 +550,11 @@ win_mozc() {
     ls -l data/dictionary_oss/dictionary00.txt
   fi
 
+  if $opts[win-modern]; then
+    log "applying windows modern UI assets"
+    cp -f $PROJECT/assets/windows_appearance/* renderer/win32/
+  fi
+
   log "start bazel build task"
   local bazel_targets=(package)
   if $opts[emacs]; then
@@ -568,8 +575,10 @@ win_mozc() {
     if $opts[emacs]; then
       cp -f mozc_emacs_helper.exe $env[win-home]/.local/bin
     fi
-    win_cmd start /wait msiexec /i Mozc64.msi
-    log "installation finished successfully"
+    local win_msi_path=$(wslpath -w "$stats[win-workspace]/dist/Mozc64.msi")
+    log "installing/upgrading mozc msi"
+    win_cmd start /wait msiexec /i "$win_msi_path" REINSTALL=ALL REINSTALLMODE=amus
+    log "installation finished"
     cd -
   fi
 }
