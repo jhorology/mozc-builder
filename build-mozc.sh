@@ -55,23 +55,23 @@ local this_script=$(basename $0)
 
 usage() {
   print -rC1 -- \
-        "" \
-        "Usage:" \
-        "    $this_script:t <-h|--help>            Show this  help" \
-        "    $this_script:t [build options...]     Build mozc" \
-        "" \
-        "build options:" \
-        "    --setup, --no-setup                    Install & Setup build tools & libraraies. Default: $opts[setup]" \
-        "    --for-win, --no-for-win                Build mozc for windows. This option is only aveilable under WSL. Default: $opts[for-win]" \
-        "    --update, --no-update                  Sync with remote git repositories. Default: $opts[update]" \
-        "    --clean, --no-clean                    Clean build. Default: $opts[clean]" \
-        "    --install, --no-install                Install mozc after build task. Default: $opts[install]" \
-        "    --brew-qt, --no-brew-qt                Build with Homebrew's Qt for macOS. Default: $opts[brew-qt]" \
-        "    --win-workspace=<dir>                  Location for build workspace for windows. Default: $opts[win-workspace]" \
-        "                                           Relative path from USERPROFILE directory." \
-        "    --macos-modern, --no-macos-modern      Modern appearance for candidate window (macOS). Default: $opts[macos-modern]" \
-        "    --win-modern, --no-win-modern          Modern appearance for candidate window (Windows). Default: $opts[win-modern]" \
-  "    --alt-cannadic, --no-alt-cannadic      Enable additional alt-canna dictionary. Default: $opts[alt-cannadic]" \
+    "" \
+    "Usage:" \
+    "    $this_script:t <-h|--help>            Show this  help" \
+    "    $this_script:t [build options...]     Build mozc" \
+    "" \
+    "build options:" \
+    "    --setup, --no-setup                    Install & Setup build tools & libraraies. Default: $opts[setup]" \
+    "    --for-win, --no-for-win                Build mozc for windows. This option is only aveilable under WSL. Default: $opts[for-win]" \
+    "    --update, --no-update                  Sync with remote git repositories. Default: $opts[update]" \
+    "    --clean, --no-clean                    Clean build. Default: $opts[clean]" \
+    "    --install, --no-install                Install mozc after build task. Default: $opts[install]" \
+    "    --brew-qt, --no-brew-qt                Build with Homebrew's Qt for macOS. Default: $opts[brew-qt]" \
+    "    --win-workspace=<dir>                  Location for build workspace for windows. Default: $opts[win-workspace]" \
+    "                                           Relative path from USERPROFILE directory." \
+    "    --macos-modern, --no-macos-modern      Modern appearance for candidate window (macOS). Default: $opts[macos-modern]" \
+    "    --win-modern, --no-win-modern          Modern appearance for candidate window (Windows). Default: $opts[win-modern]" \
+    "    --alt-cannadic, --no-alt-cannadic      Enable additional alt-canna dictionary. Default: $opts[alt-cannadic]" \
     "    --edict2, --no-edict2                  Enable additional edict2 dictionary. Default: $opts[edict2]" \
     "    --jawiki, --no-jawiki                  Enable additional jawiki dictionary. Default: $opts[jawiki]" \
     "    --neologd, --no-neologd                Enable additional neolog dictionary. Default: $opts[neologd]" \
@@ -161,9 +161,9 @@ fedora_pkgs() {
 
   sudo dnf update -y --no-best
   sudo dnf install -y \
-       glib2-devel \
-       ibus-devel \
-       qt6-qtbase-devel
+    glib2-devel \
+    ibus-devel \
+    qt6-qtbase-devel
   sudo dnf autoremove
   sudo dnf clean all
 }
@@ -238,7 +238,7 @@ opts() {
   done
 
   zparseopts -D -E -F -A cmd_opts -- \
-             h -help $aveilable_opts[*]
+    h -help $aveilable_opts[*]
 
   for o in ${(@k)cmd_opts}; do
     if [[ $o == -h || $o == --help ]]; then
@@ -285,15 +285,15 @@ init() {
 
 repos() {
   if repo $PROJECT/repos \
-          utuhiro78/merge-ut-dictionaries \
-          $opts[update] $opts[clean]; then
+    utuhiro78/merge-ut-dictionaries \
+    $opts[update] $opts[clean]; then
     stats[ut-changed]=true
   fi
   for dic in ${(@k)dict_opts}; do
     if $opts[$dic]; then
       if repo $PROJECT/repos \
-              utuhiro78/mozcdic-ut-${dic} \
-              $opts[update] $opts[clean]; then
+        utuhiro78/mozcdic-ut-${dic} \
+        $opts[update] $opts[clean]; then
         stats[ut-changed]=true
       fi
     fi
@@ -305,14 +305,14 @@ repos() {
   fi
 
   if repo $mozc_base_dir \
-          google/mozc \
-          $opts[update] $opts[clean]; then
+    google/mozc \
+    $opts[update] $opts[clean]; then
     stats[mozc-changed]=true
 
     cd $mozc_base_dir/mozc
     local mozc_deps=$(git hash-object -w src/build_tools/update_deps.py)
     if [[ ! -f $PROJECT/revs/mozc_deps ]] \
-         || [[ $mozc_deps != $(cat $PROJECT/revs/mozc_deps) ]]; then
+      || [[ $mozc_deps != $(cat $PROJECT/revs/mozc_deps) ]]; then
       stats[mozc-deps-changed]=true
       echo $mozc_deps > $PROJECT/revs/mozc_deps
     fi
@@ -384,8 +384,8 @@ macos_mozc() {
     qt_path="$PROJECT/repos/brew_qt"
     qt_rev="$(brew list --version qt@6)"
     if [[ ! -d "$qt_path" \
-            || ! -f "$PROJECT/revs/brew-qt" \
-            || "$qt_rev" != "$(cat "$PROJECT/revs/brew-qt")" ]]; then
+      || ! -f "$PROJECT/revs/brew-qt" \
+      || "$qt_rev" != "$(cat "$PROJECT/revs/brew-qt")" ]]; then
 
       log "Copying Qt Frameworks (this may take a few seconds)..."
 
@@ -400,7 +400,7 @@ macos_mozc() {
       echo "Stripping old signatures from Qt libraries..."
       chmod -R +w "$qt_path/lib" "$qt_path/plugins"
       find "$qt_path/lib" "$qt_path/plugins" \
-           -type f \( -name "Qt*" -o -name "*.dylib" \) \
+        -type f \( -name "Qt*" -o -name "*.dylib" \) \
         | xargs codesign --remove-signature 2>/dev/null || true
 
       echo "$qt_rev" > "$PROJECT/revs/brew-qt"
@@ -412,8 +412,8 @@ macos_mozc() {
     qt_rev="$(cat "$PROJECT/revs/qt")"
 
     if [[ ! -d third_party/qt \
-            || ! -f $PROJECT/revs/qt \
-            || "$qt_rev" != "$(cat third_party/qt_src/.tag)" ]]; then
+      || ! -f $PROJECT/revs/qt \
+      || "$qt_rev" != "$(cat third_party/qt_src/.tag)" ]]; then
       log "building Qt"
       python build_tools/build_qt.py --release --confirm_license
       cp -f third_party/qt_src/.tag $PROJECT/revs/qt
@@ -430,11 +430,18 @@ macos_mozc() {
     ls -l data/dictionary_oss/dictionary00.txt
   fi
 
+  # Always restore renderer sources first so bazel detects changes when
+  # switching between --macos-modern and --no-macos-modern across builds.
+  log "restoring renderer/mac sources to git HEAD"
+  git checkout -- renderer/mac/
+
   if $opts[macos-modern]; then
     cp $PROJECT/assets/macos_appearance/CandidateView.mm renderer/mac
     cp $PROJECT/assets/macos_appearance/CandidateWindow.mm renderer/mac
     cp $PROJECT/assets/macos_appearance/InfolistView.mm renderer/mac
     cp $PROJECT/assets/macos_appearance/InfolistWindow.mm renderer/mac
+  else
+    log "using default (no-modern) renderer sources"
   fi
 
   local bazel_targets=(package)
@@ -443,10 +450,10 @@ macos_mozc() {
   fi
 
   MOZC_QT_PATH="$qt_path" \
-              bazelisk build \
-              $bazel_targets[@] \
-              --config oss_macos \
-              --config release_build
+    bazelisk build \
+    $bazel_targets[@] \
+    --config oss_macos \
+    --config release_build
 
   cp -f bazel-bin/mac/Mozc.pkg $PROJECT/dist
   if $opts[emacs]; then
@@ -535,8 +542,8 @@ win_mozc() {
   fi
 
   if [[ ! -d third_party/qt ]] \
-       || [[ ! -f "$PROJECT/revs/qt" ]] \
-       || ! cmp -s "$PROJECT/revs/qt" third_party/qt_src/.tag; then
+    || [[ ! -f "$PROJECT/revs/qt" ]] \
+    || ! cmp -s "$PROJECT/revs/qt" third_party/qt_src/.tag; then
     log "building qt"
     win_cmd python build_tools/build_qt.py --release --confirm_license
     cp -f third_party/qt_src/.tag  "$PROJECT/revs/qt"
@@ -550,37 +557,31 @@ win_mozc() {
     ls -l data/dictionary_oss/dictionary00.txt
   fi
 
+  # Always restore renderer sources first so bazel detects changes when
+  # switching between --win-modern and --no-win-modern across builds.
+  log "restoring renderer/win32 sources to git HEAD"
+  git checkout -- renderer/win32/
+
   if $opts[win-modern]; then
     log "applying windows modern UI assets"
     cp -f $PROJECT/assets/windows_appearance/* renderer/win32/
+  else
+    log "using default (no-modern) renderer sources"
   fi
 
-  log "start bazel build task"
-  local bazel_targets=(package)
-  if $opts[emacs]; then
-    bazel_targets+=(//unix/emacs:mozc_emacs_helper)
-  fi
-  win_cmd "bazelisk build $bazel_targets[*] --config oss_windows --config release_build"
+  # Copy PowerShell scripts to Windows workspace
+  cp -rf $PROJECT/scripts/powershell/* $stats[win-workspace]/
 
-  if $opts[emacs]; then
-    cp -f bazel-bin/unix/emacs/mozc_emacs_helper.exe $stats[win-workspace]/dist
-  fi
-  cp -f bazel-bin/win32/installer/* $stats[win-workspace]/dist
+  log "start windows build & install task via PowerShell script..."
+  local ps_args=()
+  $opts[emacs] && ps_args+=("-Emacs")
+  $opts[install] && ps_args+=("-Install")
+
+  local win_build_ps1=$(wslpath -w "$stats[win-workspace]/win_build.ps1")
+  /mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -ExecutionPolicy Bypass \
+    -File "$win_build_ps1" $ps_args[*] -WorkspaceDir $(wslpath -w "$stats[win-workspace]")
 
   cd -
-
-  if $opts[install]; then
-    cd $stats[win-workspace]/dist
-    log "installing mozc"
-    if $opts[emacs]; then
-      cp -f mozc_emacs_helper.exe $env[win-home]/.local/bin
-    fi
-    local win_msi_path=$(wslpath -w "$stats[win-workspace]/dist/Mozc64.msi")
-    log "installing/upgrading mozc msi"
-    win_cmd start /wait msiexec /i "$win_msi_path" REINSTALL=ALL REINSTALLMODE=amus
-    log "installation finished"
-    cd -
-  fi
 }
 
 
