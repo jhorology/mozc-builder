@@ -523,53 +523,49 @@ class DirectWriteTextRenderer : public TextRenderer {
   }
 
   wil::com_ptr_nothrow<IDWriteTextFormat> CreateFormat(const LOGFONT& logfont) {
-    HRESULT hr = S_OK;
-    wil::com_ptr_nothrow<IDWriteFont> font;
-    hr = dwrite_interop_->CreateFontFromLOGFONT(&logfont, font.put());
-    if (FAILED(hr)) {
-      return nullptr;
-    }
-    wil::com_ptr_nothrow<IDWriteFontFamily> font_family;
-    hr = font->GetFontFamily(font_family.put());
-    if (FAILED(hr)) {
-      return nullptr;
-    }
-    wil::com_ptr_nothrow<IDWriteLocalizedStrings> localized_family_names;
-    hr = font_family->GetFamilyNames(localized_family_names.put());
-    if (FAILED(hr)) {
-      return nullptr;
-    }
-    UINT32 length_without_null = 0;
-    hr = localized_family_names->GetStringLength(0, &length_without_null);
-    if (FAILED(hr)) {
-      return nullptr;
-    }
-    std::wstring family_name(size_t(length_without_null + 1), L'\0');
-    hr = localized_family_names->GetString(0, family_name.data(), family_name.size());
-    if (FAILED(hr)) {
-      return nullptr;
-    }
-    family_name.resize(length_without_null);
     auto font_size = logfont.lfHeight;
     if (font_size < 0) {
       font_size = -font_size;
-    } else {
-      DWRITE_FONT_METRICS font_metrix = {};
-      font->GetMetrics(&font_metrix);
-      const auto cell_height = static_cast<float>(font_metrix.ascent + font_metrix.descent) /
-                               font_metrix.designUnitsPerEm;
-      font_size /= cell_height;
     }
 
     wchar_t locale_name[LOCALE_NAME_MAX_LENGTH] = {};
     if (::GetUserDefaultLocaleName(locale_name, std::size(locale_name)) == 0) {
-      return nullptr;
+      wcscpy_s(locale_name, L"ja-JP");
     }
 
+    wil::com_ptr_nothrow<IDWriteFont> font;
+    HRESULT hr = dwrite_interop_->CreateFontFromLOGFONT(&logfont, font.put());
+    if (SUCCEEDED(hr) && font != nullptr) {
+      wil::com_ptr_nothrow<IDWriteFontFamily> font_family;
+      if (SUCCEEDED(font->GetFontFamily(font_family.put())) && font_family != nullptr) {
+        wil::com_ptr_nothrow<IDWriteLocalizedStrings> localized_family_names;
+        if (SUCCEEDED(font_family->GetFamilyNames(localized_family_names.put())) &&
+            localized_family_names != nullptr) {
+          UINT32 length_without_null = 0;
+          if (SUCCEEDED(localized_family_names->GetStringLength(0, &length_without_null))) {
+            std::wstring family_name(size_t(length_without_null + 1), L'\0');
+            if (SUCCEEDED(
+                    localized_family_names->GetString(0, family_name.data(), family_name.size()))) {
+              family_name.resize(length_without_null);
+              wil::com_ptr_nothrow<IDWriteTextFormat> format;
+              hr = dwrite_factory_->CreateTextFormat(
+                  family_name.c_str(), nullptr, font->GetWeight(), font->GetStyle(),
+                  font->GetStretch(), font_size, locale_name, format.put());
+              if (SUCCEEDED(hr) && format != nullptr) {
+                return format;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Fallback: create format directly using logfont.lfFaceName
     wil::com_ptr_nothrow<IDWriteTextFormat> format;
-    hr = dwrite_factory_->CreateTextFormat(family_name.c_str(), nullptr, font->GetWeight(),
-                                           font->GetStyle(), font->GetStretch(), font_size,
-                                           locale_name, format.put());
+    hr = dwrite_factory_->CreateTextFormat(
+        logfont.lfFaceName, nullptr,
+        logfont.lfWeight >= FW_BOLD ? DWRITE_FONT_WEIGHT_BOLD : DWRITE_FONT_WEIGHT_NORMAL,
+        DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, font_size, locale_name, format.put());
     return format;
   }
 

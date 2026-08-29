@@ -422,16 +422,16 @@ void CandidateWindow::UpdateLayout(const commands::CandidateWindow& candidates) 
       footer_size.height = std::max(footer_size.height, footer_logo_display_size_.height);
     }
 
-    if (candidate_window_->candidate_size() < candidate_window_->size()) {
-      const std::wstring minimum_width_as_wstring =
-          mozc::win32::Utf8ToWide(style_.column_minimum_width_string());
-      const Size minimum_size = text_renderer_->MeasureString(TextRenderer::FONTSET_CANDIDATE,
-                                                              minimum_width_as_wstring.c_str());
-      table_layout_->EnsureColumnsWidth(COLUMN_CANDIDATE, COLUMN_DESCRIPTION, minimum_size.width);
-    }
-
     footer_size.height += style_.footer_border_colors_size();
     table_layout_->EnsureFooterSize(footer_size);
+  }
+
+  if (candidate_window_->candidate_size() < candidate_window_->size()) {
+    const std::wstring minimum_width_as_wstring =
+        mozc::win32::Utf8ToWide(style_.column_minimum_width_string());
+    const Size minimum_size = text_renderer_->MeasureString(TextRenderer::FONTSET_CANDIDATE,
+                                                            minimum_width_as_wstring.c_str());
+    table_layout_->EnsureColumnsWidth(COLUMN_CANDIDATE, COLUMN_DESCRIPTION, minimum_size.width);
   }
 
   table_layout_->SetRowRectPadding(style_.row_rect_padding());

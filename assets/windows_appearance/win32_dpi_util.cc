@@ -49,7 +49,7 @@ void GetScaledRendererStyle(::mozc::renderer::RendererStyle* style, uint32_t dpi
   style->set_scrollbar_width(static_cast<int>(4 * scale_factor));
 
   // Colors: Windows 11 Fluent style
-  style->mutable_candidate_style()->set_font_size(18);
+  style->mutable_candidate_style()->set_font_size(14);
   style->mutable_candidate_style()->mutable_foreground_color()->set_r(28);
   style->mutable_candidate_style()->mutable_foreground_color()->set_g(28);
   style->mutable_candidate_style()->mutable_foreground_color()->set_b(30);

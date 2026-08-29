@@ -50,15 +50,17 @@ void ApplyDwmAttributes(HWND hwnd) {
     hDwm = ::LoadLibraryW(L"dwmapi.dll");
   }
   if (hDwm) {
-    typedef HRESULT (WINAPI *PFN_DwmSetWindowAttribute)(HWND, DWORD, LPCVOID, DWORD);
+    typedef HRESULT(WINAPI * PFN_DwmSetWindowAttribute)(HWND, DWORD, LPCVOID, DWORD);
     auto pDwmSetWindowAttribute = reinterpret_cast<PFN_DwmSetWindowAttribute>(
         ::GetProcAddress(hDwm, "DwmSetWindowAttribute"));
     if (pDwmSetWindowAttribute) {
-      DWORD preference = 2; // DWMWCP_ROUNDED
-      pDwmSetWindowAttribute(hwnd, 33 /* DWMWA_WINDOW_CORNER_PREFERENCE */, &preference, sizeof(preference));
+      DWORD preference = 2;  // DWMWCP_ROUNDED
+      pDwmSetWindowAttribute(hwnd, 33 /* DWMWA_WINDOW_CORNER_PREFERENCE */, &preference,
+                             sizeof(preference));
 
       BOOL darkMode = SystemTheme::GetInstance().IsDarkMode() ? TRUE : FALSE;
-      pDwmSetWindowAttribute(hwnd, 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */, &darkMode, sizeof(darkMode));
+      pDwmSetWindowAttribute(hwnd, 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */, &darkMode,
+                             sizeof(darkMode));
     }
   }
 }
@@ -121,13 +123,12 @@ LRESULT InfolistWindow::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
   HDC target_dc = paint_dc.is_valid() ? paint_dc.get() : dc;
 
   wil::unique_hdc memdc(::CreateCompatibleDC(target_dc));
-  wil::unique_hbitmap bitmap(::CreateCompatibleBitmap(
-      target_dc, client_rect.Width(), client_rect.Height()));
-  wil::unique_select_object old_bitmap =
-      wil::SelectObject(memdc.get(), bitmap.get());
+  wil::unique_hbitmap bitmap(
+      ::CreateCompatibleBitmap(target_dc, client_rect.Width(), client_rect.Height()));
+  wil::unique_select_object old_bitmap = wil::SelectObject(memdc.get(), bitmap.get());
   DoPaint(memdc.get());
-  ::BitBlt(target_dc, client_rect.left, client_rect.top, client_rect.Width(),
-           client_rect.Height(), memdc.get(), 0, 0, SRCCOPY);
+  ::BitBlt(target_dc, client_rect.left, client_rect.top, client_rect.Width(), client_rect.Height(),
+           memdc.get(), 0, 0, SRCCOPY);
   return 0;
 }
 
@@ -152,13 +153,10 @@ Size InfolistWindow::DoPaint(HDC dc) {
     const RendererStyle::TextStyle& caption_style = infostyle.caption_style();
     const int caption_height = infostyle.caption_height();
 
-    const Rect caption_rect(
-        infostyle.window_border() + 8,
-        ypos,
-        infostyle.window_width() - infostyle.window_border() * 2 - 16,
-        caption_height);
-    const std::wstring caption_str =
-        mozc::win32::Utf8ToWide(infostyle.caption_string());
+    const Rect caption_rect(infostyle.window_border() + 8, ypos,
+                            infostyle.window_width() - infostyle.window_border() * 2 - 16,
+                            caption_height);
+    const std::wstring caption_str = mozc::win32::Utf8ToWide(infostyle.caption_string());
 
     text_renderer_->RenderText(dc, caption_str, caption_rect,
                                TextRenderer::FONTSET_INFOLIST_CAPTION);
@@ -188,8 +186,7 @@ Size InfolistWindow::DoPaintRow(HDC dc, int row, int ypos) {
   const RendererStyle::TextStyle& desc_style = infostyle.description_style();
   const double scale_factor = GetDPIScalingFactor(dpi_);
 
-  const int title_width =
-      infostyle.window_width() - 16 * scale_factor;
+  const int title_width = infostyle.window_width() - 16 * scale_factor;
   const int desc_width = title_width;
   const Information& info = usages.information(row);
 
@@ -207,28 +204,22 @@ Size InfolistWindow::DoPaintRow(HDC dc, int row, int ypos) {
                  : TextRenderer::FONTSET_INFOLIST_DESCRIPTION,
       desc_str, desc_width);
 
-  int row_height =
-      title_size.height + desc_size.height + static_cast<int>(12 * scale_factor);
+  int row_height = title_size.height + desc_size.height + static_cast<int>(12 * scale_factor);
 
   if (dc == nullptr) {
     return Size(0, row_height);
   }
 
-  const Rect title_rect(
-      static_cast<int>(8 * scale_factor),
-      ypos + static_cast<int>(4 * scale_factor),
-      title_width, title_size.height);
-  const Rect desc_rect(
-      static_cast<int>(8 * scale_factor),
-      title_rect.Top() + title_rect.Height() + static_cast<int>(2 * scale_factor),
-      desc_width, desc_size.height);
+  const Rect title_rect(static_cast<int>(8 * scale_factor),
+                        ypos + static_cast<int>(4 * scale_factor), title_width, title_size.height);
+  const Rect desc_rect(static_cast<int>(8 * scale_factor),
+                       title_rect.Top() + title_rect.Height() + static_cast<int>(2 * scale_factor),
+                       desc_width, desc_size.height);
 
   if (is_focused) {
-    CRect selected_rect(
-        static_cast<int>(4 * scale_factor),
-        ypos,
-        infostyle.window_width() - static_cast<int>(4 * scale_factor),
-        ypos + row_height);
+    CRect selected_rect(static_cast<int>(4 * scale_factor), ypos,
+                        infostyle.window_width() - static_cast<int>(4 * scale_factor),
+                        ypos + row_height);
 
     const COLORREF bg_color = SystemTheme::GetInstance().GetAccentColor();
     wil::unique_hbrush brush(::CreateSolidBrush(bg_color));
@@ -237,20 +228,17 @@ Size InfolistWindow::DoPaintRow(HDC dc, int row, int ypos) {
     const auto old_pen = wil::SelectObject(dc, pen.get());
 
     const int corner_radius = static_cast<int>(5 * scale_factor);
-    ::RoundRect(dc, selected_rect.left, selected_rect.top,
-               selected_rect.right, selected_rect.bottom,
-               corner_radius * 2, corner_radius * 2);
+    ::RoundRect(dc, selected_rect.left, selected_rect.top, selected_rect.right,
+                selected_rect.bottom, corner_radius * 2, corner_radius * 2);
   }
 
-  text_renderer_->RenderText(
-      dc, title_str, title_rect,
-      is_focused ? TextRenderer::FONTSET_INFOLIST_TITLE_FOCUSED
-                 : TextRenderer::FONTSET_INFOLIST_TITLE);
+  text_renderer_->RenderText(dc, title_str, title_rect,
+                             is_focused ? TextRenderer::FONTSET_INFOLIST_TITLE_FOCUSED
+                                        : TextRenderer::FONTSET_INFOLIST_TITLE);
 
-  text_renderer_->RenderText(
-      dc, desc_str, desc_rect,
-      is_focused ? TextRenderer::FONTSET_INFOLIST_DESCRIPTION_FOCUSED
-                 : TextRenderer::FONTSET_INFOLIST_DESCRIPTION);
+  text_renderer_->RenderText(dc, desc_str, desc_rect,
+                             is_focused ? TextRenderer::FONTSET_INFOLIST_DESCRIPTION_FOCUSED
+                                        : TextRenderer::FONTSET_INFOLIST_DESCRIPTION);
 
   return Size(0, row_height);
 }
@@ -278,7 +266,8 @@ LRESULT InfolistWindow::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam,
   return 0;
 }
 
-LRESULT InfolistWindow::OnThemeOrColorChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT InfolistWindow::OnThemeOrColorChanged(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                                              BOOL& bHandled) {
   SystemTheme::GetInstance().Update();
   text_renderer_->OnThemeChanged();
   if (m_hWnd) {
