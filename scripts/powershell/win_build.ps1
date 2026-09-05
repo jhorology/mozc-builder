@@ -26,6 +26,23 @@ if (-not (Test-Path $srcDir)) {
 $env:ANDROID_HOME = ""
 $env:ANDROID_NDK_HOME = ""
 
+# Ensure BAZEL_VC is set for Bazel genrules (e.g. //win32/installer:installer)
+if (-not $env:BAZEL_VC) {
+  try {
+    $vcDir = & python (Join-Path $srcDir "build_tools\vs_util.py") 2>$null
+    if ($LASTEXITCODE -eq 0 -and $vcDir) {
+      $env:BAZEL_VC = ($vcDir | Select-Object -Last 1).Trim()
+    }
+  } catch {}
+
+  if (-not $env:BAZEL_VC) {
+    $defaultVc = "C:\Program Files\Microsoft Visual Studio\2022\Community\VC"
+    if (Test-Path $defaultVc) {
+      $env:BAZEL_VC = $defaultVc
+    }
+  }
+}
+
 # Prepare .bazelrc.user argument if present in WorkspaceDir
 $bazelrcPath = Join-Path $WorkspaceDir ".bazelrc.user"
 $bazelrcArgs = @()
@@ -47,7 +64,7 @@ try {
 
   $targetStr = $bazelTargets -join ' '
   Write-Host "Running: bazelisk $($bazelrcArgs -join ' ') build $targetStr --config oss_windows --config release_build"
-  & bazelisk $bazelrcArgs build $bazelTargets --config oss_windows --config release_build --action_env=ANDROID_HOME= --action_env=ANDROID_NDK_HOME=
+  & bazelisk $bazelrcArgs build $bazelTargets --config oss_windows --config release_build --action_env=ANDROID_HOME= --action_env=ANDROID_NDK_HOME= --action_env=BAZEL_VC
   if ($LASTEXITCODE -ne 0) {
     Write-Error "Bazel build failed with exit code $LASTEXITCODE"
     exit $LASTEXITCODE
