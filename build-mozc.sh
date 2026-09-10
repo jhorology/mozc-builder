@@ -16,9 +16,9 @@ declare -A build_bool_opts=(
   [for-win]=false
   [update]=false
   [clean]=false
+  [format]=true
   [emacs]=true
   [install]=false
-  [brew-qt]=true
   [brew-qt]=true
   [macos-modern]=true
   [win-modern]=true
@@ -65,6 +65,7 @@ usage() {
     "    --for-win, --no-for-win                Build mozc for windows. This option is only aveilable under WSL. Default: $opts[for-win]" \
     "    --update, --no-update                  Sync with remote git repositories. Default: $opts[update]" \
     "    --clean, --no-clean                    Clean build. Default: $opts[clean]" \
+    "    --format, --no-format                  Format assets source code. Default: $opts[format]" \
     "    --install, --no-install                Install mozc after build task. Default: $opts[install]" \
     "    --brew-qt, --no-brew-qt                Build with Homebrew's Qt for macOS. Default: $opts[brew-qt]" \
     "    --win-workspace=<dir>                  Location for build workspace for windows. Default: $opts[win-workspace]" \
@@ -161,6 +162,7 @@ fedora_pkgs() {
 
   sudo dnf update -y --no-best
   sudo dnf install -y \
+    clang-tools-extra \
     glib2-devel \
     ibus-devel \
     qt6-qtbase-devel
@@ -317,6 +319,32 @@ repos() {
       echo $mozc_deps > $PROJECT/revs/mozc_deps
     fi
     cd -
+  fi
+}
+
+format_assets() {
+  if ! $opts[format]; then
+    return
+  fi
+
+  log "formatting assets source code"
+
+  if ! command -v clang-format >/dev/null 2>&1; then
+    log "Warning: clang-format not found. Skipping format."
+    return
+  fi
+
+  local style_arg="--style=file"
+  if [[ -f $PROJECT/.clang-format ]]; then
+    style_arg="--style=file:$PROJECT/.clang-format"
+  elif [[ -f $PROJECT/repos/mozc/.clang-format ]]; then
+    style_arg="--style=file:$PROJECT/repos/mozc/.clang-format"
+  fi
+
+  local files=($PROJECT/assets/**/*.{cc,cpp,h,hpp,mm}(N))
+  if (( ${#files} > 0 )); then
+    clang-format -i $style_arg $files
+    log "formatted ${#files} asset files"
   fi
 }
 
@@ -593,6 +621,7 @@ opts "$@"
 
 init
 repos
+format_assets
 activate_mise
 
 ut

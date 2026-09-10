@@ -61,14 +61,19 @@ class CandidateWindow : public ATL::CWindowImpl<CandidateWindow, ATL::CWindow,
   LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
   LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
   LRESULT OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-  LRESULT OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-  LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+  LRESULT OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                          BOOL& bHandled);
+  LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                        BOOL& bHandled);
   LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
   LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-  LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-  LRESULT OnThemeOrColorChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+  LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                          BOOL& bHandled);
+  LRESULT OnThemeOrColorChanged(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                                BOOL& bHandled);
   LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-  LRESULT OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+  LRESULT OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                        BOOL& bHandled);
 
   void UpdateDpi(uint32_t dpi);
   void UpdateLayout(const commands::CandidateWindow& candidates);

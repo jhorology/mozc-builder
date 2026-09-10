@@ -49,10 +49,11 @@ CRect ToCRect(const Rect& rect) {
   return CRect(rect.Left(), rect.Top(), rect.Right(), rect.Bottom());
 }
 
-int GetCandidateArrayIndexByCandidateIndex(const commands::CandidateWindow& candidate_window,
-                                           int candidate_index) {
+int GetCandidateArrayIndexByCandidateIndex(
+    const commands::CandidateWindow& candidate_window, int candidate_index) {
   for (size_t i = 0; i < candidate_window.candidate_size(); ++i) {
-    const commands::CandidateWindow::Candidate& candidate = candidate_window.candidate(i);
+    const commands::CandidateWindow::Candidate& candidate =
+        candidate_window.candidate(i);
     if (candidate.index() == candidate_index) {
       return i;
     }
@@ -60,8 +61,10 @@ int GetCandidateArrayIndexByCandidateIndex(const commands::CandidateWindow& cand
   return candidate_window.candidate_size();
 }
 
-std::string GetIndexGuideString(const commands::CandidateWindow& candidate_window) {
-  if (!candidate_window.has_footer() || !candidate_window.footer().index_visible()) {
+std::string GetIndexGuideString(
+    const commands::CandidateWindow& candidate_window) {
+  if (!candidate_window.has_footer() ||
+      !candidate_window.footer().index_visible()) {
     return "";
   }
   const int focused_index = candidate_window.focused_index();
@@ -77,11 +80,13 @@ int GetFocusedArrayIndex(const commands::CandidateWindow& candidate_window) {
   if (!candidate_window.has_focused_index()) {
     return invalid_index;
   }
-  return GetCandidateArrayIndexByCandidateIndex(candidate_window, candidate_window.focused_index());
+  return GetCandidateArrayIndexByCandidateIndex(
+      candidate_window, candidate_window.focused_index());
 }
 
-std::wstring GetDisplayStringByColumn(const commands::CandidateWindow::Candidate& candidate,
-                                      COLUMN_TYPE column_type) {
+std::wstring GetDisplayStringByColumn(
+    const commands::CandidateWindow::Candidate& candidate,
+    COLUMN_TYPE column_type) {
   std::wstring display_string;
 
   switch (column_type) {
@@ -100,7 +105,8 @@ std::wstring GetDisplayStringByColumn(const commands::CandidateWindow::Candidate
       if (candidate.has_annotation()) {
         const commands::Annotation& annotation = candidate.annotation();
         if (annotation.has_prefix()) {
-          display_string = mozc::win32::Utf8ToWide(annotation.prefix()) + display_string;
+          display_string =
+              mozc::win32::Utf8ToWide(annotation.prefix()) + display_string;
         }
         if (annotation.has_suffix()) {
           display_string += mozc::win32::Utf8ToWide(annotation.suffix());
@@ -123,7 +129,8 @@ std::wstring GetDisplayStringByColumn(const commands::CandidateWindow::Candidate
 
 HBITMAP LoadBitmapFromResource(HMODULE module, int resource_id) {
   return reinterpret_cast<HBITMAP>(
-      ::LoadImage(module, MAKEINTRESOURCE(resource_id), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION));
+      ::LoadImage(module, MAKEINTRESOURCE(resource_id), IMAGE_BITMAP, 0, 0,
+                  LR_CREATEDIBSECTION));
 }
 
 void FillSolidRect(HDC dc, const RECT* rect, COLORREF color) {
@@ -144,17 +151,18 @@ void ApplyDwmAttributes(HWND hwnd) {
     hDwm = ::LoadLibraryW(L"dwmapi.dll");
   }
   if (hDwm) {
-    typedef HRESULT(WINAPI * PFN_DwmSetWindowAttribute)(HWND, DWORD, LPCVOID, DWORD);
+    typedef HRESULT(WINAPI * PFN_DwmSetWindowAttribute)(HWND, DWORD, LPCVOID,
+                                                        DWORD);
     auto pDwmSetWindowAttribute = reinterpret_cast<PFN_DwmSetWindowAttribute>(
         ::GetProcAddress(hDwm, "DwmSetWindowAttribute"));
     if (pDwmSetWindowAttribute) {
       DWORD preference = 2;  // DWMWCP_ROUNDED
-      pDwmSetWindowAttribute(hwnd, 33 /* DWMWA_WINDOW_CORNER_PREFERENCE */, &preference,
-                             sizeof(preference));
+      pDwmSetWindowAttribute(hwnd, 33 /* DWMWA_WINDOW_CORNER_PREFERENCE */,
+                             &preference, sizeof(preference));
 
       BOOL darkMode = SystemTheme::GetInstance().IsDarkMode() ? TRUE : FALSE;
-      pDwmSetWindowAttribute(hwnd, 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */, &darkMode,
-                             sizeof(darkMode));
+      pDwmSetWindowAttribute(hwnd, 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */,
+                             &darkMode, sizeof(darkMode));
     }
   }
 }
@@ -181,20 +189,20 @@ void CandidateWindow::UpdateDpiDependentResources() {
   const double scale_factor = GetDPIScalingFactor(dpi_);
   double image_scale_factor = 1.0;
   if (scale_factor < 1.125) {
-    footer_logo_.reset(
-        LoadBitmapFromResource(::GetModuleHandle(nullptr), IDB_FOOTER_LOGO_COLOR_100));
+    footer_logo_.reset(LoadBitmapFromResource(::GetModuleHandle(nullptr),
+                                              IDB_FOOTER_LOGO_COLOR_100));
     image_scale_factor = 1.0;
   } else if (scale_factor < 1.375) {
-    footer_logo_.reset(
-        LoadBitmapFromResource(::GetModuleHandle(nullptr), IDB_FOOTER_LOGO_COLOR_125));
+    footer_logo_.reset(LoadBitmapFromResource(::GetModuleHandle(nullptr),
+                                              IDB_FOOTER_LOGO_COLOR_125));
     image_scale_factor = 1.25;
   } else if (scale_factor < 1.75) {
-    footer_logo_.reset(
-        LoadBitmapFromResource(::GetModuleHandle(nullptr), IDB_FOOTER_LOGO_COLOR_150));
+    footer_logo_.reset(LoadBitmapFromResource(::GetModuleHandle(nullptr),
+                                              IDB_FOOTER_LOGO_COLOR_150));
     image_scale_factor = 1.5;
   } else {
-    footer_logo_.reset(
-        LoadBitmapFromResource(::GetModuleHandle(nullptr), IDB_FOOTER_LOGO_COLOR_200));
+    footer_logo_.reset(LoadBitmapFromResource(::GetModuleHandle(nullptr),
+                                              IDB_FOOTER_LOGO_COLOR_200));
     image_scale_factor = 2.0;
   }
 
@@ -202,14 +210,16 @@ void CandidateWindow::UpdateDpiDependentResources() {
   if (footer_logo_.is_valid()) {
     BITMAP bm = {};
     if (::GetObject(footer_logo_.get(), sizeof(bm), &bm)) {
-      footer_logo_display_size_ = Size(bm.bmWidth * (scale_factor / image_scale_factor),
-                                       bm.bmHeight * (scale_factor / image_scale_factor));
+      footer_logo_display_size_ =
+          Size(bm.bmWidth * (scale_factor / image_scale_factor),
+               bm.bmHeight * (scale_factor / image_scale_factor));
     }
   }
   indicator_width_ = kIndicatorWidthInDefaultDPI * scale_factor;
 }
 
-LRESULT CandidateWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT CandidateWindow::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                                  BOOL& bHandled) {
   EnableOrDisableWindowForWorkaround();
   ApplyDwmAttributes(m_hWnd);
   return 0;
@@ -224,21 +234,25 @@ void CandidateWindow::UpdateDpi(uint32_t dpi) {
 
 void CandidateWindow::EnableOrDisableWindowForWorkaround() {
   BOOL is_tracking_enabled = FALSE;
-  if (::SystemParametersInfo(SPI_GETACTIVEWINDOWTRACKING, 0, &is_tracking_enabled, 0)) {
+  if (::SystemParametersInfo(SPI_GETACTIVEWINDOWTRACKING, 0,
+                             &is_tracking_enabled, 0)) {
     EnableWindow(!is_tracking_enabled);
   }
 }
 
-LRESULT CandidateWindow::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT CandidateWindow::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                                   BOOL& bHandled) {
   ::PostQuitMessage(0);
   return 0;
 }
 
-LRESULT CandidateWindow::OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT CandidateWindow::OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                                      BOOL& bHandled) {
   return TRUE;
 }
 
-LRESULT CandidateWindow::OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT CandidateWindow::OnGetMinMaxInfo(UINT uMsg, WPARAM wParam,
+                                         LPARAM lParam, BOOL& bHandled) {
   MINMAXINFO* min_max_info = reinterpret_cast<MINMAXINFO*>(lParam);
   if (min_max_info) {
     min_max_info->ptMinTrackSize.x = 1;
@@ -253,12 +267,14 @@ void CandidateWindow::HandleMouseEvent(UINT nFlags, const CPoint& point,
   if (send_command_interface_ == nullptr) return;
 
   for (size_t i = 0; i < candidate_window_->candidate_size(); ++i) {
-    const commands::CandidateWindow::Candidate& candidate = candidate_window_->candidate(i);
+    const commands::CandidateWindow::Candidate& candidate =
+        candidate_window_->candidate(i);
     const CRect rect = ToCRect(table_layout_->GetRowRect(i));
     if (rect.PtInRect(point)) {
       commands::SessionCommand command;
-      command.set_type(close_candidatewindow ? commands::SessionCommand::SELECT_CANDIDATE
-                                             : commands::SessionCommand::HIGHLIGHT_CANDIDATE);
+      command.set_type(close_candidatewindow
+                           ? commands::SessionCommand::SELECT_CANDIDATE
+                           : commands::SessionCommand::HIGHLIGHT_CANDIDATE);
       command.set_id(candidate.id());
       commands::Output output;
       send_command_interface_->SendCommand(command, &output);
@@ -267,21 +283,24 @@ void CandidateWindow::HandleMouseEvent(UINT nFlags, const CPoint& point,
   }
 }
 
-LRESULT CandidateWindow::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT CandidateWindow::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                                       BOOL& bHandled) {
   UINT nFlags = static_cast<UINT>(wParam);
   CPoint point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
   HandleMouseEvent(nFlags, point, false);
   return 0;
 }
 
-LRESULT CandidateWindow::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT CandidateWindow::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                                     BOOL& bHandled) {
   UINT nFlags = static_cast<UINT>(wParam);
   CPoint point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
   HandleMouseEvent(nFlags, point, true);
   return 0;
 }
 
-LRESULT CandidateWindow::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT CandidateWindow::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                                     BOOL& bHandled) {
   if (!mouse_moving_ || (wParam & MK_LBUTTON) != MK_LBUTTON) return 0;
   UINT nFlags = static_cast<UINT>(wParam);
   CPoint point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
@@ -289,7 +308,8 @@ LRESULT CandidateWindow::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
   return 0;
 }
 
-LRESULT CandidateWindow::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT CandidateWindow::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                                 BOOL& bHandled) {
   HDC dc = reinterpret_cast<HDC>(wParam);
   CRect client_rect;
   this->GetClientRect(&client_rect);
@@ -299,16 +319,18 @@ LRESULT CandidateWindow::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
   HDC target_dc = paint_dc.is_valid() ? paint_dc.get() : dc;
 
   wil::unique_hdc memdc(::CreateCompatibleDC(target_dc));
-  wil::unique_hbitmap bitmap(
-      ::CreateCompatibleBitmap(target_dc, client_rect.Width(), client_rect.Height()));
-  wil::unique_select_object old_bitmap = wil::SelectObject(memdc.get(), bitmap.get());
+  wil::unique_hbitmap bitmap(::CreateCompatibleBitmap(
+      target_dc, client_rect.Width(), client_rect.Height()));
+  wil::unique_select_object old_bitmap =
+      wil::SelectObject(memdc.get(), bitmap.get());
   DoPaint(memdc.get());
-  ::BitBlt(target_dc, client_rect.left, client_rect.top, client_rect.Width(), client_rect.Height(),
-           memdc.get(), 0, 0, SRCCOPY);
+  ::BitBlt(target_dc, client_rect.left, client_rect.top, client_rect.Width(),
+           client_rect.Height(), memdc.get(), 0, 0, SRCCOPY);
   return 0;
 }
 
-LRESULT CandidateWindow::OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT CandidateWindow::OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                                       BOOL& bHandled) {
   return OnPaint(uMsg, wParam, lParam, bHandled);
 }
 
@@ -338,7 +360,8 @@ void CandidateWindow::DoPaint(HDC dc) {
   DrawFrame(dc);
 }
 
-LRESULT CandidateWindow::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT CandidateWindow::OnSettingChange(UINT uMsg, WPARAM wParam,
+                                         LPARAM lParam, BOOL& bHandled) {
   SystemTheme::GetInstance().Update();
   text_renderer_->OnThemeChanged();
   if (m_hWnd) {
@@ -364,8 +387,8 @@ LRESULT CandidateWindow::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam
   return 0;
 }
 
-LRESULT CandidateWindow::OnThemeOrColorChanged(UINT uMsg, WPARAM wParam, LPARAM lParam,
-                                               BOOL& bHandled) {
+LRESULT CandidateWindow::OnThemeOrColorChanged(UINT uMsg, WPARAM wParam,
+                                               LPARAM lParam, BOOL& bHandled) {
   SystemTheme::GetInstance().Update();
   text_renderer_->OnThemeChanged();
   if (m_hWnd) {
@@ -375,7 +398,8 @@ LRESULT CandidateWindow::OnThemeOrColorChanged(UINT uMsg, WPARAM wParam, LPARAM 
   return 0;
 }
 
-void CandidateWindow::UpdateLayout(const commands::CandidateWindow& candidates) {
+void CandidateWindow::UpdateLayout(
+    const commands::CandidateWindow& candidates) {
   *candidate_window_ = candidates;
 
   if (metrics_changed_) {
@@ -383,7 +407,8 @@ void CandidateWindow::UpdateLayout(const commands::CandidateWindow& candidates) 
     metrics_changed_ = false;
   }
 
-  table_layout_->Initialize(candidate_window_->candidate_size(), NUMBER_OF_COLUMNS);
+  table_layout_->Initialize(candidate_window_->candidate_size(),
+                            NUMBER_OF_COLUMNS);
   table_layout_->SetWindowBorder(style_.window_border());
 
   if (candidate_window_->candidate_size() < candidate_window_->size()) {
@@ -398,28 +423,33 @@ void CandidateWindow::UpdateLayout(const commands::CandidateWindow& candidates) 
       const Size label_string_size = text_renderer_->MeasureString(
           TextRenderer::FONTSET_FOOTER_LABEL, L" " + footer_label + L" ");
       footer_size.width += label_string_size.width;
-      footer_size.height = std::max(footer_size.height, label_string_size.height);
+      footer_size.height =
+          std::max(footer_size.height, label_string_size.height);
     } else if (candidate_window_->footer().has_sub_label()) {
       const std::wstring footer_sub_label =
           mozc::win32::Utf8ToWide(candidate_window_->footer().sub_label());
-      const Size label_string_size = text_renderer_->MeasureString(
-          TextRenderer::FONTSET_FOOTER_SUBLABEL, L" " + footer_sub_label + L" ");
+      const Size label_string_size =
+          text_renderer_->MeasureString(TextRenderer::FONTSET_FOOTER_SUBLABEL,
+                                        L" " + footer_sub_label + L" ");
       footer_size.width += label_string_size.width;
-      footer_size.height = std::max(footer_size.height, label_string_size.height);
+      footer_size.height =
+          std::max(footer_size.height, label_string_size.height);
     }
 
     if (candidate_window_->footer().index_visible()) {
       const std::wstring index_guide_string =
           mozc::win32::Utf8ToWide(GetIndexGuideString(*candidate_window_));
-      const Size index_guide_size =
-          text_renderer_->MeasureString(TextRenderer::FONTSET_FOOTER_INDEX, index_guide_string);
+      const Size index_guide_size = text_renderer_->MeasureString(
+          TextRenderer::FONTSET_FOOTER_INDEX, index_guide_string);
       footer_size.width += index_guide_size.width;
-      footer_size.height = std::max(footer_size.height, index_guide_size.height);
+      footer_size.height =
+          std::max(footer_size.height, index_guide_size.height);
     }
 
     if (footer_logo_.is_valid() && candidate_window_->footer().logo_visible()) {
       footer_size.width += footer_logo_display_size_.width;
-      footer_size.height = std::max(footer_size.height, footer_logo_display_size_.height);
+      footer_size.height =
+          std::max(footer_size.height, footer_logo_display_size_.height);
     }
 
     footer_size.height += style_.footer_border_colors_size();
@@ -429,43 +459,49 @@ void CandidateWindow::UpdateLayout(const commands::CandidateWindow& candidates) 
   if (candidate_window_->candidate_size() < candidate_window_->size()) {
     const std::wstring minimum_width_as_wstring =
         mozc::win32::Utf8ToWide(style_.column_minimum_width_string());
-    const Size minimum_size = text_renderer_->MeasureString(TextRenderer::FONTSET_CANDIDATE,
-                                                            minimum_width_as_wstring.c_str());
-    table_layout_->EnsureColumnsWidth(COLUMN_CANDIDATE, COLUMN_DESCRIPTION, minimum_size.width);
+    const Size minimum_size = text_renderer_->MeasureString(
+        TextRenderer::FONTSET_CANDIDATE, minimum_width_as_wstring.c_str());
+    table_layout_->EnsureColumnsWidth(COLUMN_CANDIDATE, COLUMN_DESCRIPTION,
+                                      minimum_size.width);
   }
 
   table_layout_->SetRowRectPadding(style_.row_rect_padding());
-  const Size gap1_size = text_renderer_->MeasureString(TextRenderer::FONTSET_CANDIDATE, L" ");
+  const Size gap1_size =
+      text_renderer_->MeasureString(TextRenderer::FONTSET_CANDIDATE, L" ");
   table_layout_->EnsureCellSize(COLUMN_GAP1, gap1_size);
 
   bool description_found = false;
   for (size_t i = 0; i < candidate_window_->candidate_size(); ++i) {
-    const commands::CandidateWindow::Candidate& candidate = candidate_window_->candidate(i);
-    const std::wstring shortcut = GetDisplayStringByColumn(candidate, COLUMN_SHORTCUT);
-    const std::wstring description = GetDisplayStringByColumn(candidate, COLUMN_DESCRIPTION);
-    const std::wstring candidate_string = GetDisplayStringByColumn(candidate, COLUMN_CANDIDATE);
+    const commands::CandidateWindow::Candidate& candidate =
+        candidate_window_->candidate(i);
+    const std::wstring shortcut =
+        GetDisplayStringByColumn(candidate, COLUMN_SHORTCUT);
+    const std::wstring description =
+        GetDisplayStringByColumn(candidate, COLUMN_DESCRIPTION);
+    const std::wstring candidate_string =
+        GetDisplayStringByColumn(candidate, COLUMN_CANDIDATE);
 
     if (!shortcut.empty()) {
-      const Size rendering_size =
-          text_renderer_->MeasureString(TextRenderer::FONTSET_SHORTCUT, L" " + shortcut + L" ");
+      const Size rendering_size = text_renderer_->MeasureString(
+          TextRenderer::FONTSET_SHORTCUT, L" " + shortcut + L" ");
       table_layout_->EnsureCellSize(COLUMN_SHORTCUT, rendering_size);
     }
     if (!candidate_string.empty()) {
-      const Size rendering_size =
-          text_renderer_->MeasureString(TextRenderer::FONTSET_CANDIDATE, candidate_string);
+      const Size rendering_size = text_renderer_->MeasureString(
+          TextRenderer::FONTSET_CANDIDATE, candidate_string);
       table_layout_->EnsureCellSize(COLUMN_CANDIDATE, rendering_size);
     }
     if (!description.empty()) {
-      const Size rendering_size =
-          text_renderer_->MeasureString(TextRenderer::FONTSET_DESCRIPTION, description + L" ");
+      const Size rendering_size = text_renderer_->MeasureString(
+          TextRenderer::FONTSET_DESCRIPTION, description + L" ");
       table_layout_->EnsureCellSize(COLUMN_DESCRIPTION, rendering_size);
       description_found = true;
     }
   }
 
   const wchar_t* gap2_string = (description_found ? L"   " : L" ");
-  const Size gap2_size =
-      text_renderer_->MeasureString(TextRenderer::FONTSET_CANDIDATE, gap2_string);
+  const Size gap2_size = text_renderer_->MeasureString(
+      TextRenderer::FONTSET_CANDIDATE, gap2_string);
   table_layout_->EnsureCellSize(COLUMN_GAP2, gap2_size);
 
   table_layout_->FreezeLayout();
@@ -476,11 +512,14 @@ void CandidateWindow::SetSendCommandInterface(
   send_command_interface_ = send_command_interface;
 }
 
-Size CandidateWindow::GetLayoutSize() const { return table_layout_->GetTotalSize(); }
+Size CandidateWindow::GetLayoutSize() const {
+  return table_layout_->GetTotalSize();
+}
 
 Rect CandidateWindow::GetSelectionRectInScreenCord() const {
   const int focused_array_index = GetFocusedArrayIndex(*candidate_window_);
-  if (0 <= focused_array_index && focused_array_index < candidate_window_->candidate_size()) {
+  if (0 <= focused_array_index &&
+      focused_array_index < candidate_window_->candidate_size()) {
     CRect rect = ToCRect(table_layout_->GetRowRect(focused_array_index));
     ClientToScreen(&rect);
     return Rect(rect.left, rect.top, rect.Width(), rect.Height());
@@ -491,28 +530,35 @@ Rect CandidateWindow::GetSelectionRectInScreenCord() const {
 Rect CandidateWindow::GetCandidateColumnInClientCord() const {
   return table_layout_->GetCellRect(0, COLUMN_CANDIDATE);
 }
-Rect CandidateWindow::GetFirstRowInClientCord() const { return table_layout_->GetRowRect(0); }
+Rect CandidateWindow::GetFirstRowInClientCord() const {
+  return table_layout_->GetRowRect(0);
+}
 
 void CandidateWindow::DrawCells(HDC dc) {
-  COLUMN_TYPE kColumnTypes[] = {COLUMN_SHORTCUT, COLUMN_CANDIDATE, COLUMN_DESCRIPTION};
-  TextRenderer::FONT_TYPE kNormalFontTypes[] = {TextRenderer::FONTSET_SHORTCUT,
-                                                TextRenderer::FONTSET_CANDIDATE,
-                                                TextRenderer::FONTSET_DESCRIPTION};
-  TextRenderer::FONT_TYPE kFocusedFontTypes[] = {TextRenderer::FONTSET_SHORTCUT_FOCUSED,
-                                                 TextRenderer::FONTSET_CANDIDATE_FOCUSED,
-                                                 TextRenderer::FONTSET_DESCRIPTION_FOCUSED};
+  COLUMN_TYPE kColumnTypes[] = {COLUMN_SHORTCUT, COLUMN_CANDIDATE,
+                                COLUMN_DESCRIPTION};
+  TextRenderer::FONT_TYPE kNormalFontTypes[] = {
+      TextRenderer::FONTSET_SHORTCUT, TextRenderer::FONTSET_CANDIDATE,
+      TextRenderer::FONTSET_DESCRIPTION};
+  TextRenderer::FONT_TYPE kFocusedFontTypes[] = {
+      TextRenderer::FONTSET_SHORTCUT_FOCUSED,
+      TextRenderer::FONTSET_CANDIDATE_FOCUSED,
+      TextRenderer::FONTSET_DESCRIPTION_FOCUSED};
 
   const int focused_array_index = GetFocusedArrayIndex(*candidate_window_);
 
-  for (size_t type_index = 0; type_index < std::size(kColumnTypes); ++type_index) {
+  for (size_t type_index = 0; type_index < std::size(kColumnTypes);
+       ++type_index) {
     const COLUMN_TYPE column_type = kColumnTypes[type_index];
 
     std::vector<TextRenderingInfo> normal_list;
     std::vector<TextRenderingInfo> focused_list;
 
     for (size_t i = 0; i < candidate_window_->candidate_size(); ++i) {
-      const commands::CandidateWindow::Candidate& candidate = candidate_window_->candidate(i);
-      const std::wstring display_string = GetDisplayStringByColumn(candidate, column_type);
+      const commands::CandidateWindow::Candidate& candidate =
+          candidate_window_->candidate(i);
+      const std::wstring display_string =
+          GetDisplayStringByColumn(candidate, column_type);
       if (display_string.empty()) continue;
 
       const Rect text_rect = table_layout_->GetCellRect(i, column_type);
@@ -524,10 +570,12 @@ void CandidateWindow::DrawCells(HDC dc) {
     }
 
     if (!normal_list.empty()) {
-      text_renderer_->RenderTextList(dc, normal_list, kNormalFontTypes[type_index]);
+      text_renderer_->RenderTextList(dc, normal_list,
+                                     kNormalFontTypes[type_index]);
     }
     if (!focused_list.empty()) {
-      text_renderer_->RenderTextList(dc, focused_list, kFocusedFontTypes[type_index]);
+      text_renderer_->RenderTextList(dc, focused_list,
+                                     kFocusedFontTypes[type_index]);
     }
   }
 }
@@ -538,7 +586,8 @@ void CandidateWindow::DrawVScrollBar(HDC dc) {
     const int begin_index = candidate_window_->candidate(0).index();
     const int candidates_in_page = candidate_window_->candidate_size();
     const int candidates_total = candidate_window_->size();
-    const int end_index = candidate_window_->candidate(candidates_in_page - 1).index();
+    const int end_index =
+        candidate_window_->candidate(candidates_in_page - 1).index();
     const double scale_factor = GetDPIScalingFactor(dpi_);
 
     CRect bg_rect = ToCRect(vscroll_rect);
@@ -551,11 +600,12 @@ void CandidateWindow::DrawVScrollBar(HDC dc) {
       const auto old_brush = wil::SelectObject(dc, bg_brush.get());
       const auto old_pen = wil::SelectObject(dc, bg_pen.get());
       const int r = static_cast<int>(2.0 * scale_factor);
-      ::RoundRect(dc, bg_rect.left, bg_rect.top, bg_rect.right, bg_rect.bottom, r * 2, r * 2);
+      ::RoundRect(dc, bg_rect.left, bg_rect.top, bg_rect.right, bg_rect.bottom,
+                  r * 2, r * 2);
     }
 
-    const mozc::Rect& indicator_rect =
-        table_layout_->GetVScrollIndicatorRect(begin_index, end_index, candidates_total);
+    const mozc::Rect& indicator_rect = table_layout_->GetVScrollIndicatorRect(
+        begin_index, end_index, candidates_total);
     CRect ind_rect = ToCRect(indicator_rect);
     ind_rect.left -= static_cast<int>(2.0 * scale_factor);
 
@@ -566,7 +616,8 @@ void CandidateWindow::DrawVScrollBar(HDC dc) {
       const auto old_brush = wil::SelectObject(dc, ind_brush.get());
       const auto old_pen = wil::SelectObject(dc, ind_pen.get());
       const int r = static_cast<int>(2.0 * scale_factor);
-      ::RoundRect(dc, ind_rect.left, ind_rect.top, ind_rect.right, ind_rect.bottom, r * 2, r * 2);
+      ::RoundRect(dc, ind_rect.left, ind_rect.top, ind_rect.right,
+                  ind_rect.bottom, r * 2, r * 2);
     }
   }
 }
@@ -581,7 +632,8 @@ void CandidateWindow::DrawShortcutBackground(HDC dc) {
       shortcut_colmun_rect.size.width = width;
       const CRect shortcut_colmun_crect = ToCRect(shortcut_colmun_rect);
       const bool dark_mode = SystemTheme::GetInstance().IsDarkMode();
-      const COLORREF bg_color = dark_mode ? RGB(32, 32, 36) : RGB(252, 252, 254);
+      const COLORREF bg_color =
+          dark_mode ? RGB(32, 32, 36) : RGB(252, 252, 254);
       FillSolidRect(dc, &shortcut_colmun_crect, bg_color);
     }
   }
@@ -598,28 +650,32 @@ void CandidateWindow::DrawFooter(HDC dc) {
     const bool dark_mode = SystemTheme::GetInstance().IsDarkMode();
     const COLORREF sep_color = dark_mode ? RGB(60, 60, 65) : RGB(225, 225, 230);
     ::SetDCPenColor(dc, sep_color);
-    for (size_t i = 0, y = footer_rect.Top(); i < footer_separator_height; y++, i++) {
+    for (size_t i = 0, y = footer_rect.Top(); i < footer_separator_height;
+         y++, i++) {
       ::MoveToEx(dc, footer_rect.Left(), y, nullptr);
       ::LineTo(dc, footer_rect.Right(), y);
     }
   }
 
-  const Rect footer_content_rect(footer_rect.Left(), footer_rect.Top() + footer_separator_height,
-                                 footer_rect.Width(),
-                                 footer_rect.Height() - footer_separator_height);
+  const Rect footer_content_rect(
+      footer_rect.Left(), footer_rect.Top() + footer_separator_height,
+      footer_rect.Width(), footer_rect.Height() - footer_separator_height);
 
   int left_used = 0;
   if (candidate_window_->footer().logo_visible() && footer_logo_.is_valid()) {
-    const int top_offset = (footer_content_rect.Height() - footer_logo_display_size_.height) / 2;
+    const int top_offset =
+        (footer_content_rect.Height() - footer_logo_display_size_.height) / 2;
     wil::unique_hdc src_dc(::CreateCompatibleDC(dc));
-    wil::unique_select_object old_bitmap = wil::SelectObject(src_dc.get(), footer_logo_.get());
+    wil::unique_select_object old_bitmap =
+        wil::SelectObject(src_dc.get(), footer_logo_.get());
     BITMAP bm = {};
     ::GetObject(footer_logo_.get(), sizeof(bm), &bm);
     const CSize src_size(bm.bmWidth, bm.bmHeight);
     const BLENDFUNCTION bf = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
-    ::AlphaBlend(dc, footer_content_rect.Left(), footer_content_rect.Top() + top_offset,
-                 footer_logo_display_size_.width, footer_logo_display_size_.height, src_dc.get(), 0,
-                 0, src_size.cx, src_size.cy, bf);
+    ::AlphaBlend(
+        dc, footer_content_rect.Left(), footer_content_rect.Top() + top_offset,
+        footer_logo_display_size_.width, footer_logo_display_size_.height,
+        src_dc.get(), 0, 0, src_size.cx, src_size.cy, bf);
     left_used = footer_content_rect.Left() + footer_logo_display_size_.width;
   }
 
@@ -627,8 +683,8 @@ void CandidateWindow::DrawFooter(HDC dc) {
   if (candidate_window_->footer().index_visible()) {
     const std::wstring index_guide_string =
         mozc::win32::Utf8ToWide(GetIndexGuideString(*candidate_window_));
-    const Size index_guide_size =
-        text_renderer_->MeasureString(TextRenderer::FONTSET_FOOTER_INDEX, index_guide_string);
+    const Size index_guide_size = text_renderer_->MeasureString(
+        TextRenderer::FONTSET_FOOTER_INDEX, index_guide_string);
     const Rect index_rect(footer_content_rect.Right() - index_guide_size.width,
                           footer_content_rect.Top(), index_guide_size.width,
                           footer_content_rect.Height());
@@ -641,7 +697,8 @@ void CandidateWindow::DrawFooter(HDC dc) {
     const Rect label_rect(left_used, footer_content_rect.Top(),
                           footer_content_rect.Width() - left_used - right_used,
                           footer_content_rect.Height());
-    const std::wstring footer_label = mozc::win32::Utf8ToWide(candidate_window_->footer().label());
+    const std::wstring footer_label =
+        mozc::win32::Utf8ToWide(candidate_window_->footer().label());
     text_renderer_->RenderText(dc, L" " + footer_label + L" ", label_rect,
                                TextRenderer::FONTSET_FOOTER_LABEL);
   }
@@ -651,8 +708,10 @@ void CandidateWindow::DrawSelectedRect(HDC dc) {
   DCHECK(table_layout_->IsLayoutFrozen()) << "Table layout is not frozen.";
   const int focused_array_index = GetFocusedArrayIndex(*candidate_window_);
 
-  if (0 <= focused_array_index && focused_array_index < candidate_window_->candidate_size()) {
-    CRect selected_rect = ToCRect(table_layout_->GetRowRect(focused_array_index));
+  if (0 <= focused_array_index &&
+      focused_array_index < candidate_window_->candidate_size()) {
+    CRect selected_rect =
+        ToCRect(table_layout_->GetRowRect(focused_array_index));
     const double scale_factor = GetDPIScalingFactor(dpi_);
     selected_rect.DeflateRect(static_cast<int>(3 * scale_factor),
                               static_cast<int>(2 * scale_factor));
@@ -688,7 +747,8 @@ void CandidateWindow::DrawInformationIcon(HDC dc) {
       const auto old_pen = wil::SelectObject(dc, pen.get());
 
       const int r = static_cast<int>(1.5 * scale_factor);
-      ::RoundRect(dc, rect.left, rect.top, rect.right, rect.bottom, r * 2, r * 2);
+      ::RoundRect(dc, rect.left, rect.top, rect.right, rect.bottom, r * 2,
+                  r * 2);
     }
   }
 }
@@ -705,7 +765,8 @@ void CandidateWindow::DrawFrame(HDC dc) {
   const Rect client_rect(Point(0, 0), table_layout_->GetTotalSize());
   const CRect client_crect = ToCRect(client_rect);
   const bool dark_mode = SystemTheme::GetInstance().IsDarkMode();
-  const COLORREF border_color = dark_mode ? RGB(65, 65, 70) : RGB(220, 220, 225);
+  const COLORREF border_color =
+      dark_mode ? RGB(65, 65, 70) : RGB(220, 220, 225);
 
   wil::unique_hbrush brush(::CreateSolidBrush(border_color));
   ::FrameRect(dc, &client_crect, brush.get());

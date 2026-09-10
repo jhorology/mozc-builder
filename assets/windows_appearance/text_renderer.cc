@@ -39,7 +39,9 @@ SystemTheme& SystemTheme::GetInstance() {
 }
 
 SystemTheme::SystemTheme()
-    : dark_mode_(false), accent_color_(RGB(0, 103, 192)), focused_text_color_(RGB(255, 255, 255)) {
+    : dark_mode_(false),
+      accent_color_(RGB(0, 103, 192)),
+      focused_text_color_(RGB(255, 255, 255)) {
   Update();
 }
 
@@ -63,7 +65,9 @@ bool SystemTheme::IsDarkMode() const { return dark_mode_; }
 
 COLORREF SystemTheme::GetAccentColor() const { return accent_color_; }
 
-COLORREF SystemTheme::GetFocusedTextColor() const { return focused_text_color_; }
+COLORREF SystemTheme::GetFocusedTextColor() const {
+  return focused_text_color_;
+}
 
 bool SystemTheme::CheckIsDarkMode() {
   HKEY hKey = nullptr;
@@ -75,7 +79,8 @@ bool SystemTheme::CheckIsDarkMode() {
     DWORD value = 0;
     DWORD size = sizeof(value);
     if (::RegQueryValueExW(hKey, L"AppsUseLightTheme", nullptr, &type,
-                           reinterpret_cast<LPBYTE>(&value), &size) == ERROR_SUCCESS) {
+                           reinterpret_cast<LPBYTE>(&value),
+                           &size) == ERROR_SUCCESS) {
       ::RegCloseKey(hKey);
       return value == 0;
     }
@@ -86,12 +91,13 @@ bool SystemTheme::CheckIsDarkMode() {
 
 COLORREF SystemTheme::FetchAccentColor() {
   HKEY hKey = nullptr;
-  if (::RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\DWM", 0, KEY_READ,
-                      &hKey) == ERROR_SUCCESS) {
+  if (::RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\DWM",
+                      0, KEY_READ, &hKey) == ERROR_SUCCESS) {
     DWORD type = 0;
     DWORD value = 0;
     DWORD size = sizeof(value);
-    if (::RegQueryValueExW(hKey, L"AccentColor", nullptr, &type, reinterpret_cast<LPBYTE>(&value),
+    if (::RegQueryValueExW(hKey, L"AccentColor", nullptr, &type,
+                           reinterpret_cast<LPBYTE>(&value),
                            &size) == ERROR_SUCCESS) {
       ::RegCloseKey(hKey);
       BYTE r = static_cast<BYTE>(value & 0xFF);
@@ -115,13 +121,14 @@ namespace {
 // =========================================================================
 constexpr wchar_t kFontFamily[] = L"Yu Gothic UI";  // フォントファミリー名
 
-constexpr double kCandidateFontSize = 14.0;        // 候補テキスト (例: 変換文字)
-constexpr double kShortcutFontSize = 11.0;         // ショートカット番号 (例: 1, 2, 3)
-constexpr double kDescriptionFontSize = 11.0;      // 候補の注釈・補足説明
-constexpr double kFooterFontSize = 11.0;           // フッター表示 (例: 1/9)
-constexpr double kInfolistCaptionFontSize = 11.0;  // 用例ウィンドウのキャプション
-constexpr double kInfolistTitleFontSize = 12.0;    // 用例ウィンドウの見出し
-constexpr double kInfolistDescFontSize = 10.0;     // 用例ウィンドウの説明文
+constexpr double kCandidateFontSize = 14.0;  // 候補テキスト (例: 変換文字)
+constexpr double kShortcutFontSize = 11.0;   // ショートカット番号 (例: 1, 2, 3)
+constexpr double kDescriptionFontSize = 11.0;  // 候補の注釈・補足説明
+constexpr double kFooterFontSize = 11.0;       // フッター表示 (例: 1/9)
+constexpr double kInfolistCaptionFontSize =
+    11.0;                                        // 用例ウィンドウのキャプション
+constexpr double kInfolistTitleFontSize = 12.0;  // 用例ウィンドウの見出し
+constexpr double kInfolistDescFontSize = 10.0;   // 用例ウィンドウの説明文
 // =========================================================================
 
 CRect ToCRect(const Rect& rect) {
@@ -134,7 +141,8 @@ COLORREF ToColorRef(const RendererStyle::RGBAColor& color) {
 
 COLORREF GetTextColor(TextRenderer::FONT_TYPE type, uint32_t dpi) {
   const bool dark_mode = SystemTheme::GetInstance().IsDarkMode();
-  const COLORREF focused_color = SystemTheme::GetInstance().GetFocusedTextColor();
+  const COLORREF focused_color =
+      SystemTheme::GetInstance().GetFocusedTextColor();
 
   switch (type) {
     case TextRenderer::FONTSET_SHORTCUT:
@@ -159,7 +167,8 @@ COLORREF GetTextColor(TextRenderer::FONT_TYPE type, uint32_t dpi) {
       return focused_color;
     case TextRenderer::FONTSET_DESCRIPTION_FOCUSED:
     case TextRenderer::FONTSET_INFOLIST_DESCRIPTION_FOCUSED:
-      return (focused_color == RGB(255, 255, 255)) ? RGB(230, 235, 245) : RGB(40, 40, 45);
+      return (focused_color == RGB(255, 255, 255)) ? RGB(230, 235, 245)
+                                                   : RGB(40, 40, 45);
     default:
       break;
   }
@@ -176,43 +185,50 @@ LOGFONT GetLogFont(TextRenderer::FONT_TYPE type, uint32_t dpi) {
   switch (type) {
     case TextRenderer::FONTSET_SHORTCUT:
     case TextRenderer::FONTSET_SHORTCUT_FOCUSED: {
-      font.lfHeight = -static_cast<int>(kShortcutFontSize * scale * (96.0 / 72.0));
+      font.lfHeight =
+          -static_cast<int>(kShortcutFontSize * scale * (96.0 / 72.0));
       font.lfWeight = FW_BOLD;
       return font;
     }
     case TextRenderer::FONTSET_CANDIDATE:
     case TextRenderer::FONTSET_CANDIDATE_FOCUSED: {
-      font.lfHeight = -static_cast<int>(kCandidateFontSize * scale * (96.0 / 72.0));
+      font.lfHeight =
+          -static_cast<int>(kCandidateFontSize * scale * (96.0 / 72.0));
       font.lfWeight = FW_NORMAL;
       return font;
     }
     case TextRenderer::FONTSET_DESCRIPTION:
     case TextRenderer::FONTSET_DESCRIPTION_FOCUSED: {
-      font.lfHeight = -static_cast<int>(kDescriptionFontSize * scale * (96.0 / 72.0));
+      font.lfHeight =
+          -static_cast<int>(kDescriptionFontSize * scale * (96.0 / 72.0));
       font.lfWeight = FW_NORMAL;
       return font;
     }
     case TextRenderer::FONTSET_FOOTER_INDEX:
     case TextRenderer::FONTSET_FOOTER_LABEL:
     case TextRenderer::FONTSET_FOOTER_SUBLABEL: {
-      font.lfHeight = -static_cast<int>(kFooterFontSize * scale * (96.0 / 72.0));
+      font.lfHeight =
+          -static_cast<int>(kFooterFontSize * scale * (96.0 / 72.0));
       font.lfWeight = FW_NORMAL;
       return font;
     }
     case TextRenderer::FONTSET_INFOLIST_CAPTION: {
-      font.lfHeight = -static_cast<int>(kInfolistCaptionFontSize * scale * (96.0 / 72.0));
+      font.lfHeight =
+          -static_cast<int>(kInfolistCaptionFontSize * scale * (96.0 / 72.0));
       font.lfWeight = FW_BOLD;
       return font;
     }
     case TextRenderer::FONTSET_INFOLIST_TITLE:
     case TextRenderer::FONTSET_INFOLIST_TITLE_FOCUSED: {
-      font.lfHeight = -static_cast<int>(kInfolistTitleFontSize * scale * (96.0 / 72.0));
+      font.lfHeight =
+          -static_cast<int>(kInfolistTitleFontSize * scale * (96.0 / 72.0));
       font.lfWeight = FW_BOLD;
       return font;
     }
     case TextRenderer::FONTSET_INFOLIST_DESCRIPTION:
     case TextRenderer::FONTSET_INFOLIST_DESCRIPTION_FOCUSED: {
-      font.lfHeight = -static_cast<int>(kInfolistDescFontSize * scale * (96.0 / 72.0));
+      font.lfHeight =
+          -static_cast<int>(kInfolistDescFontSize * scale * (96.0 / 72.0));
       font.lfWeight = FW_NORMAL;
       return font;
     }
@@ -244,7 +260,8 @@ DWORD GetGdiDrawTextStyle(TextRenderer::FONT_TYPE type) {
       return DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
     case TextRenderer::FONTSET_INFOLIST_TITLE:
     case TextRenderer::FONTSET_INFOLIST_TITLE_FOCUSED:
-      return DT_LEFT | DT_SINGLELINE | DT_WORDBREAK | DT_EDITCONTROL | DT_NOPREFIX;
+      return DT_LEFT | DT_SINGLELINE | DT_WORDBREAK | DT_EDITCONTROL |
+             DT_NOPREFIX;
     case TextRenderer::FONTSET_INFOLIST_DESCRIPTION:
     case TextRenderer::FONTSET_INFOLIST_DESCRIPTION_FOCUSED:
       return DT_LEFT | DT_WORDBREAK | DT_EDITCONTROL | DT_NOPREFIX;
@@ -257,7 +274,9 @@ DWORD GetGdiDrawTextStyle(TextRenderer::FONT_TYPE type) {
 class GdiTextRenderer : public TextRenderer {
  public:
   explicit GdiTextRenderer(uint32_t dpi)
-      : render_info_(SIZE_OF_FONT_TYPE), mem_dc_(::CreateCompatibleDC(nullptr)), dpi_(dpi) {
+      : render_info_(SIZE_OF_FONT_TYPE),
+        mem_dc_(::CreateCompatibleDC(nullptr)),
+        dpi_(dpi) {
     OnThemeChanged();
   }
 
@@ -293,7 +312,8 @@ class GdiTextRenderer : public TextRenderer {
     OnThemeChanged();
   }
 
-  Size MeasureString(FONT_TYPE font_type, const std::wstring_view str) const override {
+  Size MeasureString(FONT_TYPE font_type,
+                     const std::wstring_view str) const override {
     CRect rect;
     {
       const auto previous_font =
@@ -323,14 +343,16 @@ class GdiTextRenderer : public TextRenderer {
     RenderTextList(dc, infolist, font_type);
   }
 
-  void RenderTextList(HDC dc, const absl::Span<const TextRenderingInfo> display_list,
+  void RenderTextList(HDC dc,
+                      const absl::Span<const TextRenderingInfo> display_list,
                       FONT_TYPE font_type) const override {
     const auto& render_info = render_info_[font_type];
     const auto old_font = wil::SelectObject(dc, render_info.font.get());
     const auto previous_color = ::SetTextColor(dc, render_info.color);
     for (const TextRenderingInfo& info : display_list) {
       CRect rect = ToCRect(info.rect);
-      ::DrawTextW(dc, info.text.data(), info.text.size(), &rect, render_info.style);
+      ::DrawTextW(dc, info.text.data(), info.text.size(), &rect,
+                  render_info.style);
     }
     ::SetTextColor(dc, previous_color);
   }
@@ -342,9 +364,10 @@ class GdiTextRenderer : public TextRenderer {
 
 class DirectWriteTextRenderer : public TextRenderer {
  public:
-  DirectWriteTextRenderer(wil::com_ptr_nothrow<ID2D1Factory> d2d2_factory,
-                          wil::com_ptr_nothrow<IDWriteFactory> dwrite_factory,
-                          wil::com_ptr_nothrow<IDWriteGdiInterop> dwrite_interop, uint32_t dpi)
+  DirectWriteTextRenderer(
+      wil::com_ptr_nothrow<ID2D1Factory> d2d2_factory,
+      wil::com_ptr_nothrow<IDWriteFactory> dwrite_factory,
+      wil::com_ptr_nothrow<IDWriteGdiInterop> dwrite_interop, uint32_t dpi)
       : d2d2_factory_(std::move(d2d2_factory)),
         dwrite_factory_(std::move(dwrite_factory)),
         dwrite_interop_(std::move(dwrite_interop)),
@@ -355,13 +378,15 @@ class DirectWriteTextRenderer : public TextRenderer {
   static std::unique_ptr<DirectWriteTextRenderer> Create(uint32_t dpi) {
     HRESULT hr = S_OK;
     wil::com_ptr_nothrow<ID2D1Factory> d2d_factory;
-    hr = ::D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory), nullptr,
+    hr = ::D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED,
+                             __uuidof(ID2D1Factory), nullptr,
                              d2d_factory.put_void());
     if (FAILED(hr)) {
       return nullptr;
     }
     wil::com_ptr_nothrow<IDWriteFactory> dwrite_factory;
-    hr = ::DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
+    hr = ::DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED,
+                               __uuidof(IDWriteFactory),
                                dwrite_factory.put_unknown());
     if (FAILED(hr)) {
       return nullptr;
@@ -371,8 +396,9 @@ class DirectWriteTextRenderer : public TextRenderer {
     if (FAILED(hr)) {
       return nullptr;
     }
-    return std::make_unique<DirectWriteTextRenderer>(
-        std::move(d2d_factory), std::move(dwrite_factory), std::move(interop), dpi);
+    return std::make_unique<DirectWriteTextRenderer>(std::move(d2d_factory),
+                                                     std::move(dwrite_factory),
+                                                     std::move(interop), dpi);
   }
 
  private:
@@ -420,7 +446,8 @@ class DirectWriteTextRenderer : public TextRenderer {
     OnThemeChanged();
   }
 
-  Size MeasureString(FONT_TYPE font_type, const std::wstring_view str) const override {
+  Size MeasureString(FONT_TYPE font_type,
+                     const std::wstring_view str) const override {
     return MeasureStringImpl(font_type, str, 0, false);
   }
 
@@ -436,7 +463,8 @@ class DirectWriteTextRenderer : public TextRenderer {
     RenderTextList(dc, infolist, font_type);
   }
 
-  void RenderTextList(HDC dc, const absl::Span<const TextRenderingInfo> display_list,
+  void RenderTextList(HDC dc,
+                      const absl::Span<const TextRenderingInfo> display_list,
                       FONT_TYPE font_type) const override {
     constexpr size_t kMaxTrial = 3;
     size_t trial = 0;
@@ -456,7 +484,8 @@ class DirectWriteTextRenderer : public TextRenderer {
   }
 
   HRESULT
-  RenderTextListImpl(HDC dc, const absl::Span<const TextRenderingInfo> display_list,
+  RenderTextListImpl(HDC dc,
+                     const absl::Span<const TextRenderingInfo> display_list,
                      FONT_TYPE font_type) const {
     CRect total_rect;
     for (const auto& item : display_list) {
@@ -470,8 +499,8 @@ class DirectWriteTextRenderer : public TextRenderer {
       return hr;
     }
     wil::com_ptr_nothrow<ID2D1SolidColorBrush> brush;
-    hr = dc_render_target_->CreateSolidColorBrush(ToD2DColor(render_info_[font_type].color),
-                                                  brush.put());
+    hr = dc_render_target_->CreateSolidColorBrush(
+        ToD2DColor(render_info_[font_type].color), brush.put());
     if (FAILED(hr)) {
       return hr;
     }
@@ -487,15 +516,16 @@ class DirectWriteTextRenderer : public TextRenderer {
           static_cast<float>(item.rect.Right()),
           static_cast<float>(item.rect.Bottom()),
       };
-      dc_render_target_->DrawText(item.text.data(), item.text.size(),
-                                  render_info_[font_type].format_to_render.get(), render_rect,
-                                  brush.get(), option);
+      dc_render_target_->DrawText(
+          item.text.data(), item.text.size(),
+          render_info_[font_type].format_to_render.get(), render_rect,
+          brush.get(), option);
     }
     return dc_render_target_->EndDraw();
   }
 
-  Size MeasureStringImpl(FONT_TYPE font_type, const std::wstring_view str, const int width,
-                         bool use_width) const {
+  Size MeasureStringImpl(FONT_TYPE font_type, const std::wstring_view str,
+                         const int width, bool use_width) const {
     HRESULT hr = S_OK;
     constexpr FLOAT kLayoutLimit = 100000.0f;
     wil::com_ptr_nothrow<IDWriteTextLayout> layout;
@@ -510,7 +540,8 @@ class DirectWriteTextRenderer : public TextRenderer {
     if (FAILED(hr)) {
       return Size();
     }
-    return Size(ceilf(metrix.widthIncludingTrailingWhitespace), ceilf(metrix.height));
+    return Size(ceilf(metrix.widthIncludingTrailingWhitespace),
+                ceilf(metrix.height));
   }
 
   static D2D1_COLOR_F ToD2DColor(COLORREF color_ref) {
@@ -537,20 +568,24 @@ class DirectWriteTextRenderer : public TextRenderer {
     HRESULT hr = dwrite_interop_->CreateFontFromLOGFONT(&logfont, font.put());
     if (SUCCEEDED(hr) && font != nullptr) {
       wil::com_ptr_nothrow<IDWriteFontFamily> font_family;
-      if (SUCCEEDED(font->GetFontFamily(font_family.put())) && font_family != nullptr) {
+      if (SUCCEEDED(font->GetFontFamily(font_family.put())) &&
+          font_family != nullptr) {
         wil::com_ptr_nothrow<IDWriteLocalizedStrings> localized_family_names;
-        if (SUCCEEDED(font_family->GetFamilyNames(localized_family_names.put())) &&
+        if (SUCCEEDED(
+                font_family->GetFamilyNames(localized_family_names.put())) &&
             localized_family_names != nullptr) {
           UINT32 length_without_null = 0;
-          if (SUCCEEDED(localized_family_names->GetStringLength(0, &length_without_null))) {
+          if (SUCCEEDED(localized_family_names->GetStringLength(
+                  0, &length_without_null))) {
             std::wstring family_name(size_t(length_without_null + 1), L'\0');
-            if (SUCCEEDED(
-                    localized_family_names->GetString(0, family_name.data(), family_name.size()))) {
+            if (SUCCEEDED(localized_family_names->GetString(
+                    0, family_name.data(), family_name.size()))) {
               family_name.resize(length_without_null);
               wil::com_ptr_nothrow<IDWriteTextFormat> format;
               hr = dwrite_factory_->CreateTextFormat(
-                  family_name.c_str(), nullptr, font->GetWeight(), font->GetStyle(),
-                  font->GetStretch(), font_size, locale_name, format.put());
+                  family_name.c_str(), nullptr, font->GetWeight(),
+                  font->GetStyle(), font->GetStretch(), font_size, locale_name,
+                  format.put());
               if (SUCCEEDED(hr) && format != nullptr) {
                 return format;
               }
@@ -564,8 +599,10 @@ class DirectWriteTextRenderer : public TextRenderer {
     wil::com_ptr_nothrow<IDWriteTextFormat> format;
     hr = dwrite_factory_->CreateTextFormat(
         logfont.lfFaceName, nullptr,
-        logfont.lfWeight >= FW_BOLD ? DWRITE_FONT_WEIGHT_BOLD : DWRITE_FONT_WEIGHT_NORMAL,
-        DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, font_size, locale_name, format.put());
+        logfont.lfWeight >= FW_BOLD ? DWRITE_FONT_WEIGHT_BOLD
+                                    : DWRITE_FONT_WEIGHT_NORMAL,
+        DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, font_size,
+        locale_name, format.put());
     return format;
   }
 
@@ -575,8 +612,8 @@ class DirectWriteTextRenderer : public TextRenderer {
     }
     const auto property = D2D1::RenderTargetProperties(
         D2D1_RENDER_TARGET_TYPE_DEFAULT,
-        D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_IGNORE), 0, 0,
-        D2D1_RENDER_TARGET_USAGE_NONE, D2D1_FEATURE_LEVEL_DEFAULT);
+        D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_IGNORE),
+        0, 0, D2D1_RENDER_TARGET_USAGE_NONE, D2D1_FEATURE_LEVEL_DEFAULT);
     d2d2_factory_->CreateDCRenderTarget(&property, dc_render_target_.put());
   }
 
@@ -591,7 +628,8 @@ class DirectWriteTextRenderer : public TextRenderer {
 }  // namespace
 
 std::unique_ptr<TextRenderer> TextRenderer::Create(uint32_t dpi) {
-  if (auto renderer = DirectWriteTextRenderer::Create(dpi); renderer != nullptr) {
+  if (auto renderer = DirectWriteTextRenderer::Create(dpi);
+      renderer != nullptr) {
     return renderer;
   }
   return std::make_unique<GdiTextRenderer>(dpi);

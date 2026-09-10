@@ -39,8 +39,8 @@ typedef ::mozc::commands::RendererCommand::ApplicationInfo ApplicationInfo;
 // 96 DPI is the default DPI in Windows.
 constexpr int kDefaultDPI = 96;
 
-typedef CWinTraits<WS_POPUP | WS_DISABLED,
-                   WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE>
+typedef CWinTraits<WS_POPUP | WS_DISABLED, WS_EX_LAYERED | WS_EX_TOOLWINDOW |
+                                               WS_EX_TOPMOST | WS_EX_NOACTIVATE>
     IndicatorWindowTraits;
 
 struct Sprite {
@@ -65,7 +65,8 @@ double GetDPIScaling() {
 }  // namespace
 
 class IndicatorWindow::WindowImpl
-    : public CWindowImpl<IndicatorWindow::WindowImpl, CWindow, IndicatorWindowTraits> {
+    : public CWindowImpl<IndicatorWindow::WindowImpl, CWindow,
+                         IndicatorWindowTraits> {
  public:
   DECLARE_WND_CLASS_EX(kIndicatorWindowClassName, 0, COLOR_WINDOW);
   WindowImpl() : alpha_(255), dpi_scaling_(GetDPIScaling()) {
@@ -80,17 +81,20 @@ class IndicatorWindow::WindowImpl
   MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChange)
   END_MSG_MAP()
 
-  void OnUpdate(const commands::RendererCommand& command, LayoutManager* layout_manager) {
+  void OnUpdate(const commands::RendererCommand& command,
+                LayoutManager* layout_manager) {
     KillTimer(kTimerEventFading);
     KillTimer(kTimerEventFadeStart);
 
     bool visible = false;
     IndicatorWindowLayout indicator_layout;
-    if (command.has_visible() && command.visible() && command.has_application_info() &&
+    if (command.has_visible() && command.visible() &&
+        command.has_application_info() &&
         command.application_info().has_indicator_info() &&
         command.application_info().indicator_info().has_status()) {
       const ApplicationInfo& app_info = command.application_info();
-      visible = layout_manager->LayoutIndicatorWindow(app_info, &indicator_layout);
+      visible =
+          layout_manager->LayoutIndicatorWindow(app_info, &indicator_layout);
     }
     if (!visible) {
       HideIndicator();
@@ -154,9 +158,10 @@ class IndicatorWindow::WindowImpl
     BLENDFUNCTION func = {AC_SRC_OVER, 0, alpha_, AC_SRC_ALPHA};
 
     {
-      wil::unique_select_object old_bitmap = wil::SelectObject(dc.get(), current_image_);
-      ::UpdateLayeredWindow(m_hWnd, nullptr, &top_left, &size, dc.get(), &src_left_top, 0, &func,
-                            ULW_ALPHA);
+      wil::unique_select_object old_bitmap =
+          wil::SelectObject(dc.get(), current_image_);
+      ::UpdateLayeredWindow(m_hWnd, nullptr, &top_left, &size, dc.get(),
+                            &src_left_top, 0, &func, ULW_ALPHA);
     }
     ShowWindow(SW_SHOWNA);
   }
@@ -202,7 +207,8 @@ class IndicatorWindow::WindowImpl
 
   void EnableOrDisableWindowForWorkaround() {
     BOOL is_tracking_enabled = FALSE;
-    if (::SystemParametersInfo(SPI_GETACTIVEWINDOWTRACKING, 0, &is_tracking_enabled, 0)) {
+    if (::SystemParametersInfo(SPI_GETACTIVEWINDOWTRACKING, 0,
+                               &is_tracking_enabled, 0)) {
       EnableWindow(!is_tracking_enabled);
     }
   }
@@ -212,7 +218,8 @@ class IndicatorWindow::WindowImpl
     LOGFONT logfont = GetMessageBoxLogFont(::GetDpiForSystem());
     info.label_font = mozc::win32::WideToUtf8(logfont.lfFaceName);
 
-    // Modern Windows Fluent Style Mode Indicator Badge (Dark rounded floating badge)
+    // Modern Windows Fluent Style Mode Indicator Badge (Dark rounded floating
+    // badge)
     info.inside_color = RGBColor(32, 33, 36);    // Sleek dark grey background
     info.frame_color = RGBColor(70, 72, 78);     // Subtle border
     info.label_color = RGBColor(255, 255, 255);  // Crisp white text
@@ -250,19 +257,25 @@ class IndicatorWindow::WindowImpl
         break;
     }
     if (!info.label.empty()) {
-      sprites_[mode].bitmap.reset(BalloonImage::Create(info, &sprites_[mode].offset));
+      sprites_[mode].bitmap.reset(
+          BalloonImage::Create(info, &sprites_[mode].offset));
     }
   }
 
-  inline LRESULT OnCreate(UINT msg_id, WPARAM wparam, LPARAM lparam, BOOL& handled) {
-    return static_cast<LRESULT>(OnCreate(reinterpret_cast<LPCREATESTRUCT>(lparam)));
+  inline LRESULT OnCreate(UINT msg_id, WPARAM wparam, LPARAM lparam,
+                          BOOL& handled) {
+    return static_cast<LRESULT>(
+        OnCreate(reinterpret_cast<LPCREATESTRUCT>(lparam)));
   }
-  inline LRESULT OnTimer(UINT msg_id, WPARAM wparam, LPARAM lparam, BOOL& handled) {
+  inline LRESULT OnTimer(UINT msg_id, WPARAM wparam, LPARAM lparam,
+                         BOOL& handled) {
     OnTimer(static_cast<UINT_PTR>(wparam));
     return 0;
   }
-  inline LRESULT OnSettingChange(UINT msg_id, WPARAM wparam, LPARAM lparam, BOOL& handled) {
-    OnSettingChange(static_cast<UINT>(wparam), reinterpret_cast<LPCTSTR>(lparam));
+  inline LRESULT OnSettingChange(UINT msg_id, WPARAM wparam, LPARAM lparam,
+                                 BOOL& handled) {
+    OnSettingChange(static_cast<UINT>(wparam),
+                    reinterpret_cast<LPCTSTR>(lparam));
     return 0;
   }
 

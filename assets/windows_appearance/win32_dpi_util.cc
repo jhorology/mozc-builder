@@ -39,7 +39,8 @@ uint32_t GetDpiForPoint(int x, int y) {
   return dpi_x;
 }
 
-void GetScaledRendererStyle(::mozc::renderer::RendererStyle* style, uint32_t dpi) {
+void GetScaledRendererStyle(::mozc::renderer::RendererStyle* style,
+                            uint32_t dpi) {
   const double scale_factor = GetDPIScalingFactor(dpi);
 
   RendererStyleHandler::GetRendererStyle(style);

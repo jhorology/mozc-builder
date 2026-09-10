@@ -24,12 +24,15 @@ namespace mozc {
 namespace renderer {
 namespace win32 {
 
-typedef ATL::CWinTraits<WS_POPUP | WS_DISABLED, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE>
+typedef ATL::CWinTraits<WS_POPUP | WS_DISABLED,
+                        WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE>
     InfolistWindowTraits;
 
-class InfolistWindow : public ATL::CWindowImpl<InfolistWindow, ATL::CWindow, InfolistWindowTraits> {
+class InfolistWindow : public ATL::CWindowImpl<InfolistWindow, ATL::CWindow,
+                                               InfolistWindowTraits> {
  public:
-  DECLARE_WND_CLASS_EX(kInfolistWindowClassName, CS_SAVEBITS | CS_DROPSHADOW, COLOR_WINDOW);
+  DECLARE_WND_CLASS_EX(kInfolistWindowClassName, CS_SAVEBITS | CS_DROPSHADOW,
+                       COLOR_WINDOW);
 
   BEGIN_MSG_MAP(InfolistWindow)
   MESSAGE_HANDLER(WM_CREATE, OnCreate)
@@ -53,16 +56,21 @@ class InfolistWindow : public ATL::CWindowImpl<InfolistWindow, ATL::CWindow, Inf
   LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
   LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
   LRESULT OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-  LRESULT OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-  LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-  LRESULT OnThemeOrColorChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+  LRESULT OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                          BOOL& bHandled);
+  LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                          BOOL& bHandled);
+  LRESULT OnThemeOrColorChanged(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                                BOOL& bHandled);
   LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-  LRESULT OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+  LRESULT OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                        BOOL& bHandled);
   LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
   void UpdateDpi(uint32_t dpi);
   void UpdateLayout(const commands::CandidateWindow& candidates);
-  void SetSendCommandInterface(client::SendCommandInterface* send_command_interface);
+  void SetSendCommandInterface(
+      client::SendCommandInterface* send_command_interface);
 
   Size GetLayoutSize();
   void DelayShow(UINT mseconds);

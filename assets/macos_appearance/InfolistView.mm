@@ -15,15 +15,15 @@ using mozc::commands::InformationList;
 using mozc::renderer::mac::MacViewUtil;
 
 // === adjust layout ====
-#define MOZC_INFO_WIDTH           320.0  // window width
-#define MOZC_INFO_PADDING_X       8.0    // horizontal padding
-#define MOZC_INFO_PADDING_Y       6.0    // vertical padding
-#define MOZC_INFO_HEADER_MARGIN_Y 8.0    // margin between header and content
-#define MOZC_INFO_ROW_MARGIN_Y    8.0    // vertical margin
-#define MOZC_INFO_TITLE_FONT      16.0   // font size for candidate
-#define MOZC_INFO_DESC_FONT       13.0   // font size for descripotion
-#define MOZC_INFO_CAPTION_FONT    12.0   // font size for "用例" in header
-#define MOZC_INFO_CORNER_RADIUS   10.0   // window corner radius
+#define MOZC_INFO_WIDTH 320.0          // window width
+#define MOZC_INFO_PADDING_X 8.0        // horizontal padding
+#define MOZC_INFO_PADDING_Y 6.0        // vertical padding
+#define MOZC_INFO_HEADER_MARGIN_Y 8.0  // margin between header and content
+#define MOZC_INFO_ROW_MARGIN_Y 8.0     // vertical margin
+#define MOZC_INFO_TITLE_FONT 16.0      // font size for candidate
+#define MOZC_INFO_DESC_FONT 13.0       // font size for descripotion
+#define MOZC_INFO_CAPTION_FONT 12.0    // font size for "用例" in header
+#define MOZC_INFO_CORNER_RADIUS 10.0   // window corner radius
 // ======================
 
 @interface InfolistView ()
@@ -51,22 +51,36 @@ using mozc::renderer::mac::MacViewUtil;
   const Information &info = usages.information(row);
   BOOL isFocused = (usages.has_focused_index() && row == usages.focused_index());
 
-  NSColor *titleColor = isFocused ? [NSColor alternateSelectedControlTextColor] : [NSColor labelColor];
-  NSColor *descColor = isFocused ? [[NSColor alternateSelectedControlTextColor] colorWithAlphaComponent:0.9] : [NSColor secondaryLabelColor];
+  NSColor *titleColor =
+      isFocused ? [NSColor alternateSelectedControlTextColor] : [NSColor labelColor];
+  NSColor *descColor =
+      isFocused ? [[NSColor alternateSelectedControlTextColor] colorWithAlphaComponent:0.9]
+                : [NSColor secondaryLabelColor];
 
-  NSDictionary *titleAttr = @{ NSFontAttributeName: [NSFont boldSystemFontOfSize:MOZC_INFO_TITLE_FONT],
-                               NSForegroundColorAttributeName: titleColor };
-  NSDictionary *descAttr = @{ NSFontAttributeName: [NSFont systemFontOfSize:MOZC_INFO_DESC_FONT],
-                              NSForegroundColorAttributeName: descColor };
+  NSDictionary *titleAttr = @{
+    NSFontAttributeName : [NSFont boldSystemFontOfSize:MOZC_INFO_TITLE_FONT],
+    NSForegroundColorAttributeName : titleColor
+  };
+  NSDictionary *descAttr = @{
+    NSFontAttributeName : [NSFont systemFontOfSize:MOZC_INFO_DESC_FONT],
+    NSForegroundColorAttributeName : descColor
+  };
 
-  NSAttributedString *titleStr = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:info.title().c_str()] attributes:titleAttr];
-  NSAttributedString *descStr = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:info.description().c_str()] attributes:descAttr];
+  NSAttributedString *titleStr = [[NSAttributedString alloc]
+      initWithString:[NSString stringWithUTF8String:info.title().c_str()]
+          attributes:titleAttr];
+  NSAttributedString *descStr = [[NSAttributedString alloc]
+      initWithString:[NSString stringWithUTF8String:info.description().c_str()]
+          attributes:descAttr];
 
   CGFloat textWidth = MOZC_INFO_WIDTH - (MOZC_INFO_PADDING_X * 2);
-  NSRect titleRect = [titleStr boundingRectWithSize:NSMakeSize(textWidth, 1000) options:NSStringDrawingUsesLineFragmentOrigin];
-  NSRect descRect = [descStr boundingRectWithSize:NSMakeSize(textWidth, 1000) options:NSStringDrawingUsesLineFragmentOrigin];
+  NSRect titleRect = [titleStr boundingRectWithSize:NSMakeSize(textWidth, 1000)
+                                            options:NSStringDrawingUsesLineFragmentOrigin];
+  NSRect descRect = [descStr boundingRectWithSize:NSMakeSize(textWidth, 1000)
+                                          options:NSStringDrawingUsesLineFragmentOrigin];
 
-  CGFloat rowHeight = titleRect.size.height + descRect.size.height + (MOZC_INFO_ROW_MARGIN_Y * 2) + 4.0;
+  CGFloat rowHeight =
+      titleRect.size.height + descRect.size.height + (MOZC_INFO_ROW_MARGIN_Y * 2) + 4.0;
 
   if (draw_flag) {
     if (isFocused) {
@@ -79,7 +93,8 @@ using mozc::renderer::mac::MacViewUtil;
     NSPoint titlePos = NSMakePoint(MOZC_INFO_PADDING_X, ypos + MOZC_INFO_ROW_MARGIN_Y);
     [titleStr drawAtPoint:titlePos];
 
-    NSRect drawDescRect = NSMakeRect(MOZC_INFO_PADDING_X, titlePos.y + titleRect.size.height + 4.0, textWidth, descRect.size.height);
+    NSRect drawDescRect = NSMakeRect(MOZC_INFO_PADDING_X, titlePos.y + titleRect.size.height + 4.0,
+                                     textWidth, descRect.size.height);
     [descStr drawWithRect:drawDescRect options:NSStringDrawingUsesLineFragmentOrigin];
   }
 
@@ -93,9 +108,12 @@ using mozc::renderer::mac::MacViewUtil;
 
   CGFloat ypos = MOZC_INFO_PADDING_Y;
 
-  NSDictionary *captionAttr = @{ NSFontAttributeName: [NSFont systemFontOfSize:MOZC_INFO_CAPTION_FONT weight:NSFontWeightBold],
-                                 NSForegroundColorAttributeName: [NSColor tertiaryLabelColor] };
-  NSAttributedString *captionStr = [[NSAttributedString alloc] initWithString:@"用例" attributes:captionAttr];
+  NSDictionary *captionAttr = @{
+    NSFontAttributeName : [NSFont systemFontOfSize:MOZC_INFO_CAPTION_FONT weight:NSFontWeightBold],
+    NSForegroundColorAttributeName : [NSColor tertiaryLabelColor]
+  };
+  NSAttributedString *captionStr = [[NSAttributedString alloc] initWithString:@"用例"
+                                                                   attributes:captionAttr];
 
   if (draw_flag) {
     [captionStr drawAtPoint:NSMakePoint(MOZC_INFO_PADDING_X, ypos)];
@@ -121,7 +139,9 @@ using mozc::renderer::mac::MacViewUtil;
   NSRectFill(rect);
 
   [[[NSColor windowBackgroundColor] colorWithAlphaComponent:0.96] set];
-  NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:rect xRadius:MOZC_INFO_CORNER_RADIUS yRadius:MOZC_INFO_CORNER_RADIUS];
+  NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:rect
+                                                       xRadius:MOZC_INFO_CORNER_RADIUS
+                                                       yRadius:MOZC_INFO_CORNER_RADIUS];
   [path addClip];
   [path fill];
 

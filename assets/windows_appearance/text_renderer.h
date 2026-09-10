@@ -21,7 +21,8 @@ namespace win32 {
 
 // text-rect pair for batch text rendering.
 struct TextRenderingInfo {
-  TextRenderingInfo(std::wstring str, Rect r) : text(std::move(str)), rect(std::move(r)) {}
+  TextRenderingInfo(std::wstring str, Rect r)
+      : text(std::move(str)), rect(std::move(r)) {}
 
   std::wstring text;
   Rect rect;
@@ -84,13 +85,16 @@ class TextRenderer {
   virtual void OnDpiChanged(uint32_t dpi) = 0;
 
   // Retrieves the bounding box for a given string.
-  virtual Size MeasureString(FONT_TYPE font_type, std::wstring_view str) const = 0;
-  virtual Size MeasureStringMultiLine(FONT_TYPE font_type, std::wstring_view str,
+  virtual Size MeasureString(FONT_TYPE font_type,
+                             std::wstring_view str) const = 0;
+  virtual Size MeasureStringMultiLine(FONT_TYPE font_type,
+                                      std::wstring_view str,
                                       int width) const = 0;
   // Renders the given |text|.
   virtual void RenderText(HDC dc, std::wstring_view text, const Rect& rect,
                           FONT_TYPE font_type) const = 0;
-  virtual void RenderTextList(HDC dc, absl::Span<const TextRenderingInfo> display_list,
+  virtual void RenderTextList(HDC dc,
+                              absl::Span<const TextRenderingInfo> display_list,
                               FONT_TYPE font_type) const = 0;
 };
 

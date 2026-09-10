@@ -5,8 +5,8 @@
 #import <Foundation/Foundation.h>
 #include <algorithm>
 #include "absl/strings/str_format.h"
-#include "protocol/commands.pb.h"
 #include "client/client_interface.h"
+#include "protocol/commands.pb.h"
 #include "renderer/mac/mac_view_util.h"
 #include "renderer/table_layout.h"
 
@@ -15,26 +15,26 @@ using mozc::commands::CandidateWindow;
 using mozc::commands::Output;
 using mozc::commands::SessionCommand;
 using mozc::renderer::ColumnType;
-using mozc::renderer::kColumnShortcut;
-using mozc::renderer::kColumnGap1;
 using mozc::renderer::kColumnCandidate;
 using mozc::renderer::kColumnDescription;
+using mozc::renderer::kColumnGap1;
+using mozc::renderer::kColumnShortcut;
 using mozc::renderer::kNumberOfColumns;
 using mozc::renderer::TableLayout;
 using mozc::renderer::mac::MacViewUtil;
 
 // === adjust layout ====
-#define MOZC_CANDIDATE_FONT_SIZE     18.0
-#define MOZC_SHORTCUT_FONT_SIZE      11.0
-#define MOZC_DESCRIPTION_FONT_SIZE   14.0
-#define MOZC_FOOTER_FONT_SIZE        13.0
+#define MOZC_CANDIDATE_FONT_SIZE 18.0
+#define MOZC_SHORTCUT_FONT_SIZE 11.0
+#define MOZC_DESCRIPTION_FONT_SIZE 14.0
+#define MOZC_FOOTER_FONT_SIZE 13.0
 
-#define MOZC_WINDOW_PADDING_X        8.0   // horizontal padding
-#define MOZC_MARGIN_NO_TO_CAND       8.0   // margin between No. and candidate
-#define MOZC_MARGIN_CAND_TO_DESC     10.0  // margin between candidate and description
-#define MOZC_ROW_PADDING_Y           2.0   // vertical row margin
-#define MOZC_HIGHLIGHT_INSET_X       4.0   // highlight horizontal inset
-#define MOZC_HIGHLIGHT_INSET_Y       1.0   // highlight vertical inset
+#define MOZC_WINDOW_PADDING_X 8.0      // horizontal padding
+#define MOZC_MARGIN_NO_TO_CAND 8.0     // margin between No. and candidate
+#define MOZC_MARGIN_CAND_TO_DESC 10.0  // margin between candidate and description
+#define MOZC_ROW_PADDING_Y 2.0         // vertical row margin
+#define MOZC_HIGHLIGHT_INSET_X 4.0     // highlight horizontal inset
+#define MOZC_HIGHLIGHT_INSET_Y 1.0     // highlight vertical inset
 // ======================
 
 @implementation CandidateView {
@@ -58,9 +58,11 @@ using mozc::renderer::mac::MacViewUtil;
 - (void)initializeDefaultStyle {
   logoImage_ = [NSImage imageNamed:@"candidate_window_logo.tiff"];
 
-  NSDictionary *attr = @{ NSFontAttributeName : [NSFont systemFontOfSize:MOZC_CANDIDATE_FONT_SIZE] };
-  NSAttributedString *defaultMessage = [[NSAttributedString alloc] initWithString:@"そのほかの文字種" attributes:attr];
-  columnMinimumWidth_ = [defaultMessage size].width + MOZC_MARGIN_CAND_TO_DESC + MOZC_WINDOW_PADDING_X;
+  NSDictionary *attr = @{NSFontAttributeName : [NSFont systemFontOfSize:MOZC_CANDIDATE_FONT_SIZE]};
+  NSAttributedString *defaultMessage =
+      [[NSAttributedString alloc] initWithString:@"そのほかの文字種" attributes:attr];
+  columnMinimumWidth_ =
+      [defaultMessage size].width + MOZC_MARGIN_CAND_TO_DESC + MOZC_WINDOW_PADDING_X;
 
   [NSBezierPath setDefaultLineWidth:1.0];
   [NSBezierPath setDefaultLineJoinStyle:NSLineJoinStyleMiter];
@@ -82,12 +84,18 @@ using mozc::renderer::mac::MacViewUtil;
     focusedRow_ = -1;
   }
 
-  NSDictionary *attrShortcut = @{ NSFontAttributeName: [NSFont systemFontOfSize:MOZC_SHORTCUT_FONT_SIZE],
-                                  NSForegroundColorAttributeName: [NSColor secondaryLabelColor] };
-  NSDictionary *attrCandidate = @{ NSFontAttributeName: [NSFont systemFontOfSize:MOZC_CANDIDATE_FONT_SIZE],
-                                   NSForegroundColorAttributeName: [NSColor labelColor] };
-  NSDictionary *attrDesc = @{ NSFontAttributeName: [NSFont systemFontOfSize:MOZC_DESCRIPTION_FONT_SIZE],
-                              NSForegroundColorAttributeName: [NSColor secondaryLabelColor] };
+  NSDictionary *attrShortcut = @{
+    NSFontAttributeName : [NSFont systemFontOfSize:MOZC_SHORTCUT_FONT_SIZE],
+    NSForegroundColorAttributeName : [NSColor secondaryLabelColor]
+  };
+  NSDictionary *attrCandidate = @{
+    NSFontAttributeName : [NSFont systemFontOfSize:MOZC_CANDIDATE_FONT_SIZE],
+    NSForegroundColorAttributeName : [NSColor labelColor]
+  };
+  NSDictionary *attrDesc = @{
+    NSFontAttributeName : [NSFont systemFontOfSize:MOZC_DESCRIPTION_FONT_SIZE],
+    NSForegroundColorAttributeName : [NSColor secondaryLabelColor]
+  };
 
   NSMutableArray *newCache = [NSMutableArray array];
   for (int i = 0; i < candidate_window_.candidate_size(); ++i) {
@@ -96,20 +104,29 @@ using mozc::renderer::mac::MacViewUtil;
     if (c.annotation().has_prefix()) val.insert(0, c.annotation().prefix());
     if (c.annotation().has_suffix()) val.append(c.annotation().suffix());
 
-    NSAttributedString *s = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:c.annotation().shortcut().c_str()] attributes:attrShortcut];
-    NSAttributedString *v = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:val.c_str()] attributes:attrCandidate];
-    NSAttributedString *d = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:c.annotation().description().c_str()] attributes:attrDesc];
+    NSAttributedString *s = [[NSAttributedString alloc]
+        initWithString:[NSString stringWithUTF8String:c.annotation().shortcut().c_str()]
+            attributes:attrShortcut];
+    NSAttributedString *v =
+        [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:val.c_str()]
+                                        attributes:attrCandidate];
+    NSAttributedString *d = [[NSAttributedString alloc]
+        initWithString:[NSString stringWithUTF8String:c.annotation().description().c_str()]
+            attributes:attrDesc];
 
-    NSSize sSize = [s size]; sSize.width += MOZC_WINDOW_PADDING_X;
-    NSSize vSize = [v size]; vSize.width += MOZC_MARGIN_NO_TO_CAND;
-    NSSize dSize = [d size]; dSize.width += MOZC_MARGIN_CAND_TO_DESC + MOZC_WINDOW_PADDING_X;
+    NSSize sSize = [s size];
+    sSize.width += MOZC_WINDOW_PADDING_X;
+    NSSize vSize = [v size];
+    vSize.width += MOZC_MARGIN_NO_TO_CAND;
+    NSSize dSize = [d size];
+    dSize.width += MOZC_MARGIN_CAND_TO_DESC + MOZC_WINDOW_PADDING_X;
 
     tableLayout_.EnsureCellSize(kColumnShortcut, MacViewUtil::ToSize(sSize));
     tableLayout_.EnsureCellSize(kColumnCandidate, MacViewUtil::ToSize(vSize));
     tableLayout_.EnsureCellSize(kColumnDescription, MacViewUtil::ToSize(dSize));
 
     NSAttributedString *empty = [[NSAttributedString alloc] initWithString:@""];
-    [newCache addObject:@[s, empty, v, d]];
+    [newCache addObject:@[ s, empty, v, d ]];
   }
 
   tableLayout_.EnsureColumnsWidth(kColumnCandidate, kColumnDescription, columnMinimumWidth_);
@@ -159,7 +176,9 @@ using mozc::renderer::mac::MacViewUtil;
 
     if (isFocused) {
       NSMutableAttributedString *mut = [text mutableCopy];
-      [mut addAttribute:NSForegroundColorAttributeName value:[NSColor alternateSelectedControlTextColor] range:NSMakeRange(0, mut.length)];
+      [mut addAttribute:NSForegroundColorAttributeName
+                  value:[NSColor alternateSelectedControlTextColor]
+                  range:NSMakeRange(0, mut.length)];
       text = mut;
     }
 
@@ -199,7 +218,8 @@ using mozc::renderer::mac::MacViewUtil;
   scrollBg.origin.x -= 2.0;
   [[NSBezierPath bezierPathWithRoundedRect:scrollBg xRadius:2.0 yRadius:2.0] fill];
 
-  const mozc::Rect indicatorRect = tableLayout_.GetVScrollIndicatorRect(beginIndex, endIndex, candidatesTotal);
+  const mozc::Rect indicatorRect =
+      tableLayout_.GetVScrollIndicatorRect(beginIndex, endIndex, candidatesTotal);
   NSRect indicatorNsRect = MacViewUtil::ToNSRect(indicatorRect);
   indicatorNsRect.origin.x -= 2.0;
   [[NSColor secondaryLabelColor] set];
@@ -211,18 +231,28 @@ using mozc::renderer::mac::MacViewUtil;
   const auto &footer = candidate_window_.footer();
   NSRect footerRect = MacViewUtil::ToNSRect(tableLayout_.GetFooterRect());
 
-  NSDictionary *attr = @{ NSFontAttributeName: [NSFont systemFontOfSize:MOZC_FOOTER_FONT_SIZE],
-                          NSForegroundColorAttributeName: [NSColor secondaryLabelColor] };
+  NSDictionary *attr = @{
+    NSFontAttributeName : [NSFont systemFontOfSize:MOZC_FOOTER_FONT_SIZE],
+    NSForegroundColorAttributeName : [NSColor secondaryLabelColor]
+  };
 
   if (footer.has_label()) {
-    NSAttributedString *s = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:footer.label().c_str()] attributes:attr];
-    [s drawAtPoint:NSMakePoint(footerRect.origin.x + MOZC_WINDOW_PADDING_X, footerRect.origin.y + (footerRect.size.height - [s size].height)/2)];
+    NSAttributedString *s = [[NSAttributedString alloc]
+        initWithString:[NSString stringWithUTF8String:footer.label().c_str()]
+            attributes:attr];
+    [s drawAtPoint:NSMakePoint(
+                       footerRect.origin.x + MOZC_WINDOW_PADDING_X,
+                       footerRect.origin.y + (footerRect.size.height - [s size].height) / 2)];
   }
 
   if (footer.index_visible()) {
-    NSString *idx = [NSString stringWithFormat:@"%d/%d", candidate_window_.focused_index() + 1, candidate_window_.size()];
+    NSString *idx = [NSString
+        stringWithFormat:@"%d/%d", candidate_window_.focused_index() + 1, candidate_window_.size()];
     NSAttributedString *s = [[NSAttributedString alloc] initWithString:idx attributes:attr];
-    [s drawAtPoint:NSMakePoint(footerRect.origin.x + footerRect.size.width - [s size].width - MOZC_WINDOW_PADDING_X, footerRect.origin.y + (footerRect.size.height - [s size].height)/2)];
+    [s drawAtPoint:NSMakePoint(
+                       footerRect.origin.x + footerRect.size.width - [s size].width -
+                           MOZC_WINDOW_PADDING_X,
+                       footerRect.origin.y + (footerRect.size.height - [s size].height) / 2)];
   }
 }
 
@@ -249,8 +279,16 @@ using mozc::renderer::mac::MacViewUtil;
   }
 }
 
-- (BOOL)isFlipped { return YES; }
-- (void)setCandidateWindow:(const mozc::commands::CandidateWindow *)cw { candidate_window_ = *cw; }
-- (void)setSendCommandInterface:(mozc::client::SendCommandInterface *)cs { command_sender_ = cs; }
-- (const mozc::renderer::TableLayout *)tableLayout { return &tableLayout_; }
+- (BOOL)isFlipped {
+  return YES;
+}
+- (void)setCandidateWindow:(const mozc::commands::CandidateWindow *)cw {
+  candidate_window_ = *cw;
+}
+- (void)setSendCommandInterface:(mozc::client::SendCommandInterface *)cs {
+  command_sender_ = cs;
+}
+- (const mozc::renderer::TableLayout *)tableLayout {
+  return &tableLayout_;
+}
 @end
