@@ -187,7 +187,7 @@ try {
     $displayVer = if ($installedVer) { $installedVer } else { 'none' }
     if (-not $installedVer -or -not $installedVer.StartsWith($targetVer)) {
       Write-Host "Installing/upgrading Mozc via MSI (installed: '$displayVer', target: '$targetVer')..."
-      Start-Process msiexec -ArgumentList '/i', "`"$msiPath`"", 'REINSTALL=ALL', 'REINSTALLMODE=amus' -Wait
+      Start-Process msiexec -ArgumentList '/i', "`"$msiPath`"" -Wait
       Write-Host "MSI installation finished"
     } else {
       Write-Host "Same version ($installedVer) detected. Directly overwriting binaries..."
