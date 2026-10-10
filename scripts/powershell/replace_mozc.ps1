@@ -1,4 +1,4 @@
-param(
+﻿param(
   [string]$mozcDir,
   [string]$distDir
 )

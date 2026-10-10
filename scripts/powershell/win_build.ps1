@@ -1,4 +1,4 @@
-param(
+﻿param(
   [switch]$Emacs,
   [switch]$Install,
   [string]$WorkspaceDir
