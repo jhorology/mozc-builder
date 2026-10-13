@@ -440,8 +440,13 @@ macos_mozc() {
       error_exit "Qt is not Installed. Try 'brew install qt@6'."
     fi
     local brew_qt_path="$(brew --prefix qt@6)"
+    # Mozc's macOS targets use these four frameworks; Homebrew's QtGui
+    # also depends on QtDBus.
+    local qt_frameworks=(QtCore QtGui QtWidgets QtPrintSupport QtDBus)
+    local qt_plugin=platforms/libqcocoa.dylib
     qt_path="$PROJECT/repos/brew_qt"
-    qt_rev="$(brew list --version qt@6)"
+    # Include the copy selection so older, full Qt caches are rebuilt.
+    qt_rev="$(brew list --version qt@6); frameworks=${(j:,:)qt_frameworks}; plugin=$qt_plugin"
     if [[ ! -d "$qt_path" \
       || ! -f "$PROJECT/revs/brew-qt" \
       || "$qt_rev" != "$(cat "$PROJECT/revs/brew-qt")" ]]; then
@@ -450,13 +455,16 @@ macos_mozc() {
 
       rm -rf "$qt_path"
       mkdir -p "$qt_path/lib"
-      mkdir -p "$qt_path/plugins"
+      mkdir -p "$qt_path/plugins/platforms"
       ln -sfn "$brew_qt_path/share/qt/libexec" "$qt_path/libexec"
       ln -sfn "$brew_qt_path/include" "$qt_path/include"
-      cp -RL "$brew_qt_path"/lib/*.framework "$qt_path/lib/"
-      cp -RL "$brew_qt_path"/share/qt/plugins/* "$qt_path/plugins/"
+      local framework
+      for framework in "${qt_frameworks[@]}"; do
+        cp -RL "$brew_qt_path/lib/$framework.framework" "$qt_path/lib/"
+      done
+      cp -L "$brew_qt_path/share/qt/plugins/$qt_plugin" "$qt_path/plugins/$qt_plugin"
 
-      echo "Stripping old signatures from Qt libraries..."
+      log "Stripping old signatures from Qt libraries..."
       chmod -R +w "$qt_path/lib" "$qt_path/plugins"
       find "$qt_path/lib" "$qt_path/plugins" \
         -type f \( -name "Qt*" -o -name "*.dylib" \) \
