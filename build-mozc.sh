@@ -16,6 +16,7 @@ declare -A build_bool_opts=(
   [for-win]=false
   [update]=false
   [clean]=false
+  [gc]=true
   [format]=true
   [emacs]=true
   [install]=false
@@ -65,6 +66,7 @@ usage() {
     "    --for-win, --no-for-win                Build mozc for windows. This option is only aveilable under WSL. Default: $opts[for-win]" \
     "    --update, --no-update                  Sync with remote git repositories. Default: $opts[update]" \
     "    --clean, --no-clean                    Clean build. Default: $opts[clean]" \
+    "    --gc, --no-gc                          Run git gc --prune=now after a successful build/install. Default: $opts[gc]" \
     "    --format, --no-format                  Format assets source code. Default: $opts[format]" \
     "    --install, --no-install                Install mozc after build task. Default: $opts[install]" \
     "    --brew-qt, --no-brew-qt                Build with Homebrew's Qt for macOS. Default: $opts[brew-qt]" \
@@ -320,6 +322,35 @@ repos() {
     fi
     cd -
   fi
+}
+
+gc_repos() {
+  if ! $opts[gc]; then
+    return
+  fi
+
+  local repo_dirs=("$PROJECT"/repos/*(N/))
+  if $opts[for-win]; then
+    repo_dirs+=("$stats[win-workspace]/mozc")
+  fi
+
+  local -U repo_dirs
+  local repo_dir
+  for repo_dir in "${repo_dirs[@]}"; do
+    # .git is a directory for clones and a file for worktrees/submodules.
+    if [[ ! -e "$repo_dir/.git" ]]; then
+      continue
+    fi
+
+    log "running git gc --prune=now: $repo_dir"
+    if ! git -C "$repo_dir" gc --prune=now; then
+      log "Warning: git gc failed: $repo_dir"
+    fi
+    if ! git -C "$repo_dir" submodule foreach --recursive \
+      'git gc --prune=now || printf "Warning: git gc failed: %s\n" "$displaypath"'; then
+      log "Warning: submodule git gc failed: $repo_dir"
+    fi
+  done
 }
 
 format_assets() {
@@ -631,3 +662,5 @@ if $opts[for-win]; then
 else
   $env[os]_mozc
 fi
+
+gc_repos
