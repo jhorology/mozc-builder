@@ -12,3 +12,9 @@ package-lock.json
 /repos
 /revs
 /dist
+
+/.agents
+/.cursor
+
+# user-local build option overrides
+/.config
