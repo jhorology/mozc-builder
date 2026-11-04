@@ -1,0 +1,17 @@
+diff --git a/src/mac/build_package.py b/src/mac/build_package.py
+index a13f579..ae19b34 100644
+--- a/src/mac/build_package.py
++++ b/src/mac/build_package.py
+@@ -71,8 +71,10 @@ def main():
+   output_path = os.path.abspath(args.output)
+ 
+   with tempfile.TemporaryDirectory() as tmp_dir:
+-    # Use the unzip command to extract symbolic links properly.
+-    util.RunOrDie(['unzip', '-q', args.input, '-d', tmp_dir])
++    # Use the ditto command to extract symbolic links properly.
++    # /usr/bin/unzip on macOS 27.2+ refuses to create symbolic links that
++    # point outside the extraction directory (e.g. /Applications/Mozc/*.app).
++    util.RunOrDie(['/usr/bin/ditto', '-x', '-k', args.input, tmp_dir])
+     os.chdir(os.path.join(tmp_dir, 'installer'))
+ 
+     # Generate a component property list from the root directory, then clear
